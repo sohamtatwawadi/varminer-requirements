@@ -1,0 +1,34 @@
+# Java / Maven
+dashboard-java/target/
+*.class
+*.jar
+*.war
+*.log
+.gradle/
+!gradle-wrapper.jar
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Optional: keep requirements.csv in repo (remove next line if you want to track it)
+# requirements.csv

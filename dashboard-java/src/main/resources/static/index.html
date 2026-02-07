@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Varminer · Product Backlog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <span class="brand-icon">◈</span>
+                <span class="brand-text">Varminer</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <span class="nav-icon">▣</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-view="capture">
+                    <span class="nav-icon">⊕</span>
+                    <span>Capture requirement</span>
+                </a>
+                <a href="#" class="nav-item" data-view="backlog">
+                    <span class="nav-icon">≡</span>
+                    <span>Product backlog</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <span class="footer-label">Requirements</span>
+                <span class="footer-meta">CSV-backed</span>
+            </div>
+        </aside>
+        <main class="main">
+            <header class="main-header">
+                <h1 class="page-title" data-title>Dashboard</h1>
+                <p class="page-subtitle" data-subtitle>Overview and KPIs</p>
+            </header>
+
+            <!-- Dashboard: KPIs -->
+            <section class="view" id="view-dashboard">
+                <div class="kpi-grid" id="kpi-grid">
+                    <div class="kpi-card kpi-total">
+                        <span class="kpi-value" id="kpi-total">—</span>
+                        <span class="kpi-label">Total requirements</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-value" id="kpi-not-started">—</span>
+                        <span class="kpi-label">Not started</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-value" id="kpi-in-dev">—</span>
+                        <span class="kpi-label">In DEV</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-value" id="kpi-in-uat">—</span>
+                        <span class="kpi-label">In UAT</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-value" id="kpi-dev-completed">—</span>
+                        <span class="kpi-label">Dev completed</span>
+                    </div>
+                    <div class="kpi-card">
+                        <span class="kpi-value" id="kpi-closed">—</span>
+                        <span class="kpi-label">Closed</span>
+                    </div>
+                </div>
+                <div class="dashboard-extra">
+                    <p class="hint">Use <strong>Capture requirement</strong> to add new items; use <strong>Product backlog</strong> to view and filter the full list.</p>
+                </div>
+            </section>
+
+            <!-- Capture requirement -->
+            <section class="view hidden" id="view-capture">
+                <div class="card form-card">
+                    <h2 class="card-title">New requirement</h2>
+                    <form id="form-capture" class="form-capture">
+                        <div class="form-row">
+                            <label>Requirement <span class="req">*</span></label>
+                            <input type="text" name="requirement" placeholder="One-sentence description of what will be delivered" required>
+                        </div>
+                        <div class="form-row">
+                            <label>Description</label>
+                            <textarea name="description" rows="3" placeholder="Context and scope"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <label>Acceptance criteria</label>
+                            <textarea name="acceptanceCriteria" rows="2" placeholder="• Criterion 1&#10;• Criterion 2"></textarea>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <label>Category</label>
+                                <input type="text" name="category" value="Varminer" placeholder="Varminer">
+                            </div>
+                            <div class="form-row">
+                                <label>Type</label>
+                                <select name="type">
+                                    <option value="Report Requirements">Report Requirements</option>
+                                    <option value="API">API</option>
+                                    <option value="UI">UI</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label>Priority</label>
+                                <select name="priority">
+                                    <option value="Critical">Critical</option>
+                                    <option value="High">High</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label>Status</label>
+                                <select name="status">
+                                    <option value="Not started">Not started</option>
+                                    <option value="In DEV">In DEV</option>
+                                    <option value="In UAT">In UAT</option>
+                                    <option value="Dev completed">Dev completed</option>
+                                    <option value="Closed">Closed</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label>Estimate</label>
+                                <input type="text" name="estimate" placeholder="e.g. 8">
+                            </div>
+                            <div class="form-row">
+                                <label>Stack rank</label>
+                                <input type="text" name="stackRank" placeholder="1">
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <label>Requestee dept</label>
+                                <input type="text" name="requesteeDept" placeholder="e.g. CRT">
+                            </div>
+                            <div class="form-row">
+                                <label>Requested by</label>
+                                <input type="text" name="requestedBy" placeholder="Team or name">
+                            </div>
+                            <div class="form-row">
+                                <label>Assignee</label>
+                                <input type="text" name="assignee" placeholder="Name">
+                            </div>
+                            <div class="form-row">
+                                <label>Release</label>
+                                <input type="text" name="release" placeholder="e.g. Q3-2025">
+                            </div>
+                            <div class="form-row">
+                                <label>Start sprint</label>
+                                <input type="text" name="startSprint" placeholder="e.g. July H2">
+                            </div>
+                            <div class="form-row">
+                                <label>Target sprint</label>
+                                <input type="text" name="targetSprint" placeholder="e.g. Aug H2">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>Clear requirement?</label>
+                            <select name="clear">
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label>Dependency (IDs)</label>
+                            <input type="text" name="dependency" placeholder="e.g. VR-001, VR-002 or —">
+                        </div>
+                        <div class="form-row">
+                            <label>Comments</label>
+                            <textarea name="comments" rows="2" placeholder="Optional notes"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save requirement</button>
+                            <button type="reset" class="btn btn-secondary">Reset</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="capture-message" class="message hidden"></div>
+            </section>
+
+            <!-- Product backlog -->
+            <section class="view hidden" id="view-backlog">
+                <div class="toolbar">
+                    <div class="filters">
+                        <label>Status</label>
+                        <select id="filter-status">
+                            <option value="">All</option>
+                            <option value="Not started">Not started</option>
+                            <option value="In DEV">In DEV</option>
+                            <option value="In UAT">In UAT</option>
+                            <option value="Dev completed">Dev completed</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                        <label>Priority</label>
+                        <select id="filter-priority">
+                            <option value="">All</option>
+                            <option value="Critical">Critical</option>
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card table-card">
+                    <div class="table-wrap">
+                        <table class="backlog-table" id="backlog-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Requirement</th>
+                                    <th>Type</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Estimate</th>
+                                    <th>Release</th>
+                                    <th>Requested by</th>
+                                </tr>
+                            </thead>
+                            <tbody id="backlog-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="detail-panel hidden" id="detail-panel">
+                    <div class="detail-header">
+                        <h3 id="detail-title">Requirement detail</h3>
+                        <button type="button" class="btn-close" id="detail-close" aria-label="Close">×</button>
+                    </div>
+                    <div id="detail-content" class="detail-content"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="/js/app.js"></script>
+</body>
+</html>
