@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -185,5 +186,24 @@ public class RequirementsService {
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * Replace all requirements with rows parsed from the given CSV input.
+     * Uses same column mapping as our CSV (ID, Category, Type, Requirement, etc.).
+     * Normalizes status (e.g. "In Progress" -> "In DEV").
+     * @return number of requirements imported
+     */
+    public int importFromCsv(InputStream csvInput) throws IOException {
+        try (Reader r = new InputStreamReader(csvInput, StandardCharsets.UTF_8)) {
+            List<Requirement> list = new CsvToBeanBuilder<Requirement>(r)
+                    .withType(Requirement.class)
+                    .withIgnoreLeadingWhiteSpace(true)
+                    .build()
+                    .parse();
+            list.forEach(req -> req.setStatus(normalizeStatus(req.getStatus())));
+            writeAll(list);
+            return list.size();
+        }
     }
 }

@@ -1,4 +1,4 @@
-# Varminer Functional Requirements
+# VarMiner Functional Requirements
 
 **Estimate unit:** _[e.g. Story points / Hours]_  
 **Last updated:** _[Date]_
@@ -9,7 +9,7 @@
 
 | ID | Category | Type | Requirement | Description | Acceptance criteria | Clear? | Estimate | Dependency | Priority | Stack | Status | Start sprint | Target sprint | Release | Requestee dept | Requested by | Assignee | Comments |
 |----|----------|------|--------------|-------------|---------------------|--------|----------|------------|----------|-------|--------|--------------|---------------|---------|----------------|--------------|----------|----------|
-| VR-001 | Varminer | Report Requirements | _One-sentence requirement._ | _Context and scope._ | • _Criterion 1_<br>• _Criterion 2_ | Yes | 8 | — | High | 1 | To Do | — | Aug H2 | Q3-2025 | CRT | CRT team | _Name_ | _Notes_ |
+| VR-001 | VarMiner | Report Requirements | _One-sentence requirement._ | _Context and scope._ | • _Criterion 1_<br>• _Criterion 2_ | Yes | 8 | — | High | 1 | To Do | — | Aug H2 | Q3-2025 | CRT | CRT team | _Name_ | _Notes_ |
 
 ---
 

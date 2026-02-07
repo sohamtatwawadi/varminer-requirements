@@ -1,5 +1,8 @@
 const API = '/api';
 
+let chartStatus = null;
+let chartPriority = null;
+
 const views = {
     dashboard: {
         title: 'Dashboard',
@@ -29,7 +32,10 @@ function setView(name) {
         document.querySelector('[data-title]').textContent = t.title;
         document.querySelector('[data-subtitle]').textContent = t.subtitle;
     }
-    if (name === 'dashboard') refreshKpis();
+    if (name === 'dashboard') {
+        refreshKpis();
+        refreshCharts();
+    }
     if (name === 'backlog') renderBacklog();
 }
 
@@ -69,6 +75,56 @@ async function refreshKpis() {
         document.getElementById('kpi-dev-completed').textContent = '—';
         document.getElementById('kpi-closed').textContent = '—';
     }
+}
+
+const CHART_COLORS = {
+    status: ['#94a3b8', '#2563eb', '#f59e0b', '#10b981', '#059669'],
+    priority: ['#dc2626', '#2563eb', '#f59e0b', '#6b7280']
+};
+
+function refreshCharts() {
+    if (typeof Chart === 'undefined') return;
+    Promise.all([fetchKpis(), fetchRequirements()]).then(([kpi, reqs]) => {
+        if (chartStatus) chartStatus.destroy();
+        if (chartPriority) chartPriority.destroy();
+        const statusCtx = document.getElementById('chart-status');
+        const priorityCtx = document.getElementById('chart-priority');
+        if (!statusCtx || !priorityCtx) return;
+        const statusLabels = ['Not started', 'In DEV', 'In UAT', 'Dev completed', 'Closed'];
+        const statusData = [kpi.notStarted, kpi.inDev, kpi.inUat, kpi.devCompleted, kpi.closed];
+        chartStatus = new Chart(statusCtx, {
+            type: 'pie',
+            data: {
+                labels: statusLabels,
+                datasets: [{ data: statusData, backgroundColor: CHART_COLORS.status }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+        const priorityLabels = ['Critical', 'High', 'Medium', 'Low'];
+        const priorityCounts = {};
+        (reqs || []).forEach(r => {
+            const p = r.priority || 'Low';
+            priorityCounts[p] = (priorityCounts[p] || 0) + 1;
+        });
+        const priorityData = priorityLabels.map(p => priorityCounts[p] || 0);
+        chartPriority = new Chart(priorityCtx, {
+            type: 'bar',
+            data: {
+                labels: priorityLabels,
+                datasets: [{ label: 'Requirements', data: priorityData, backgroundColor: CHART_COLORS.priority }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }).catch(() => {});
 }
 
 async function fetchRequirements() {
@@ -174,7 +230,7 @@ document.getElementById('form-capture').addEventListener('submit', async e => {
     hideMessage('capture-message');
     const form = e.target;
     const body = {
-        category: form.category?.value?.trim() || 'Varminer',
+        category: form.category?.value?.trim() || 'VarMiner',
         type: form.type?.value?.trim() || 'Report Requirements',
         requirement: form.requirement?.value?.trim(),
         description: form.description?.value?.trim() || '',
@@ -209,7 +265,7 @@ document.getElementById('form-capture').addEventListener('submit', async e => {
         }
         showMessage('capture-message', 'Requirement saved. ID: ' + (await res.json()).id, 'success');
         form.reset();
-        form.category.value = 'Varminer';
+        form.category.value = 'VarMiner';
         refreshKpis();
     } catch (err) {
         showMessage('capture-message', err.message || 'Failed to save.', 'error');
@@ -219,6 +275,59 @@ document.getElementById('form-capture').addEventListener('submit', async e => {
 document.getElementById('filter-status').addEventListener('change', () => renderBacklog());
 document.getElementById('filter-priority').addEventListener('change', () => renderBacklog());
 document.getElementById('detail-close').addEventListener('click', closeDetail);
+
+function showUploadMessage(text, type) {
+    const el = document.getElementById('upload-message');
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'message ' + (type || 'success');
+    el.classList.remove('hidden');
+}
+
+function hideUploadMessage() {
+    const el = document.getElementById('upload-message');
+    if (el) el.classList.add('hidden');
+}
+
+async function uploadCsv(file) {
+    hideUploadMessage();
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+        const res = await fetch(API + '/requirements/upload', { method: 'POST', body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            showUploadMessage(data.error || 'Upload failed', 'error');
+            return;
+        }
+        showUploadMessage('Imported ' + (data.imported || 0) + ' requirements.', 'success');
+        allRequirements = await fetchRequirements();
+        refreshKpis();
+        refreshCharts();
+        renderBacklog();
+    } catch (e) {
+        showUploadMessage(e.message || 'Upload failed', 'error');
+    }
+}
+
+document.getElementById('csv-file').addEventListener('change', e => {
+    const file = e.target.files && e.target.files[0];
+    if (file) uploadCsv(file);
+    e.target.value = '';
+});
+
+const uploadZone = document.getElementById('upload-zone');
+if (uploadZone) {
+    uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+    uploadZone.addEventListener('drop', e => {
+        e.preventDefault();
+        uploadZone.classList.remove('dragover');
+        const file = e.dataTransfer && e.dataTransfer.files[0];
+        if (file && file.name.toLowerCase().endsWith('.csv')) uploadCsv(file);
+        else showUploadMessage('Please drop a CSV file.', 'error');
+    });
+}
 
 // Initial load
 refreshKpis();

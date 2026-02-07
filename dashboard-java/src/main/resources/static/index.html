@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Varminer · Product Backlog</title>
+    <title>VarMiner · Product Backlog</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
         <aside class="sidebar">
             <div class="sidebar-brand">
                 <span class="brand-icon">◈</span>
-                <span class="brand-text">Varminer</span>
+                <span class="brand-text">VarMiner</span>
             </div>
             <nav class="sidebar-nav">
                 <a href="#" class="nav-item active" data-view="dashboard">
@@ -43,6 +43,15 @@
 
             <!-- Dashboard: KPIs -->
             <section class="view" id="view-dashboard">
+                <div class="upload-card">
+                    <h3>Import CSV</h3>
+                    <p>Upload a CSV with requirements in the same format (columns: ID, Category, Type, Requirement, Description, Status, Priority, etc.). It will replace current data.</p>
+                    <div class="upload-zone" id="upload-zone">
+                        <input type="file" id="csv-file" accept=".csv" />
+                        <label for="csv-file">Choose CSV file</label> or drag and drop
+                    </div>
+                    <div id="upload-message" class="message hidden"></div>
+                </div>
                 <div class="kpi-grid" id="kpi-grid">
                     <div class="kpi-card kpi-total">
                         <span class="kpi-value" id="kpi-total">—</span>
@@ -67,6 +76,20 @@
                     <div class="kpi-card">
                         <span class="kpi-value" id="kpi-closed">—</span>
                         <span class="kpi-label">Closed</span>
+                    </div>
+                </div>
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <h3>By status</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-status"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>By priority</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-priority"></canvas>
+                        </div>
                     </div>
                 </div>
                 <div class="dashboard-extra">
@@ -94,7 +117,7 @@
                         <div class="form-grid">
                             <div class="form-row">
                                 <label>Category</label>
-                                <input type="text" name="category" value="Varminer" placeholder="Varminer">
+                                <input type="text" name="category" value="VarMiner" placeholder="VarMiner">
                             </div>
                             <div class="form-row">
                                 <label>Type</label>
@@ -235,6 +258,7 @@
             </section>
         </main>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="/js/app.js"></script>
 </body>
 </html>

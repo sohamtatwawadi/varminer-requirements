@@ -1,4 +1,4 @@
-# Varminer Requirements Dashboard (Java)
+# VarMiner Requirements Dashboard (Java)
 
 Modern web dashboard for product managers: **KPIs**, **Capture requirement**, and **Product backlog**. Built with Spring Boot and a single-page UI inspired by genetic testing lab dashboards ([ref](https://paint-smooth-31188563.figma.site)).
 

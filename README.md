@@ -1,6 +1,6 @@
-# Varminer Functional Requirements — Capture Guide
+# VarMiner Functional Requirements — Capture Guide
 
-This folder contains a **single, consolidated** way to capture and track Varminer functional requirements so nothing falls through the cracks and priorities are clear.
+This folder contains a **single, consolidated** way to capture and track VarMiner functional requirements so nothing falls through the cracks and priorities are clear.
 
 ---
 
@@ -33,7 +33,7 @@ This folder contains a **single, consolidated** way to capture and track Varmine
 | Field | Purpose | Example |
 |-------|---------|--------|
 | **ID** | Unique ID (numeric or code). | `VR-001`, `1` |
-| **Category** | Area/product. | `Varminer` |
+| **Category** | Area/product. | `VarMiner` |
 | **Type** | Kind of requirement. | `Report Requirements`, `API`, `UI` |
 | **Requirement** | One short sentence: what we will deliver. | “Develop white-label report templates for domestic and international clients.” |
 | **Description** | Context, scope, and “why.” | “Create tailored white-label report templates… branding flexibility and format standardization for external partners.” |
