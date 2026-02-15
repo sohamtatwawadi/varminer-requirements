@@ -184,11 +184,30 @@ body {
 
 .kpi-card.kpi-clickable {
     cursor: pointer;
+    user-select: none;
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 
 .kpi-card.kpi-clickable:hover {
     border-color: var(--accent);
     background: var(--bg-input);
+    box-shadow: var(--shadow-card), 0 0 0 2px rgba(37, 99, 235, 0.2);
+    transform: translateY(-2px);
+}
+
+.kpi-card.kpi-clickable:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-card);
+}
+
+.kpi-card.kpi-clickable .kpi-label::after {
+    content: ' →';
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.kpi-card.kpi-clickable:hover .kpi-label::after {
+    opacity: 1;
 }
 
 .kpi-value {

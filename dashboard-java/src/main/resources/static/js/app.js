@@ -340,9 +340,8 @@ document.getElementById('form-detail').addEventListener('submit', async e => {
 document.querySelectorAll('.kpi-card.kpi-clickable').forEach(card => {
     card.addEventListener('click', () => {
         const status = card.getAttribute('data-status');
-        if (!status) return;
         const filterStatus = document.getElementById('filter-status');
-        if (filterStatus) filterStatus.value = status;
+        if (filterStatus) filterStatus.value = status !== null ? status : '';
         setView('backlog');
     });
 });
