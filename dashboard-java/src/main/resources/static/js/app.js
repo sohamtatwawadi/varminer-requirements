@@ -187,21 +187,30 @@ function escapeHtml(s) {
 }
 
 function showDetail(req) {
-    const panel = document.getElementById('detail-panel');
-    const content = document.getElementById('detail-content');
-    document.getElementById('detail-title').textContent = (req.id || '') + ' — ' + (req.requirement || '').slice(0, 50) + '…';
-    const fields = [
-        'id', 'requirement', 'description', 'acceptanceCriteria', 'clear', 'estimate', 'dependency',
-        'priority', 'stackRank', 'status', 'startSprint', 'targetSprint', 'release',
-        'requesteeDept', 'requestedBy', 'assignee', 'comments'
-    ];
-    content.innerHTML = fields.map(f => {
-        const v = req[f];
-        if (v == null || String(v).trim() === '') return '';
-        const label = f.replace(/([A-Z])/g, ' $1').replace(/^./, x => x.toUpperCase());
-        return `<div class="detail-row"><label>${escapeHtml(label)}</label><div class="value">${escapeHtml(String(v))}</div></div>`;
-    }).filter(Boolean).join('');
-    panel.classList.remove('hidden');
+    const form = document.getElementById('form-detail');
+    if (!form) return;
+    document.getElementById('detail-id').value = req.id || '';
+    form.requirement.value = req.requirement || '';
+    form.description.value = req.description || '';
+    form.acceptanceCriteria.value = req.acceptanceCriteria || '';
+    form.category.value = req.category || 'VarMiner';
+    form.type.value = req.type || 'Report Requirements';
+    form.priority.value = req.priority || 'High';
+    form.status.value = req.status || 'Not started';
+    form.estimate.value = req.estimate || '';
+    form.stackRank.value = req.stackRank || '';
+    form.requesteeDept.value = req.requesteeDept || '';
+    form.requestedBy.value = req.requestedBy || '';
+    form.assignee.value = req.assignee || '';
+    form.release.value = req.release || '';
+    form.startSprint.value = req.startSprint || '';
+    form.targetSprint.value = req.targetSprint || '';
+    form.clear.value = req.clear || 'Yes';
+    form.dependency.value = req.dependency || '—';
+    form.comments.value = req.comments || '';
+    document.getElementById('detail-title').textContent = (req.id || '') + ' — Edit';
+    hideMessage('detail-message');
+    document.getElementById('detail-panel').classList.remove('hidden');
 }
 
 function closeDetail() {
@@ -275,6 +284,68 @@ document.getElementById('form-capture').addEventListener('submit', async e => {
 document.getElementById('filter-status').addEventListener('change', () => renderBacklog());
 document.getElementById('filter-priority').addEventListener('change', () => renderBacklog());
 document.getElementById('detail-close').addEventListener('click', closeDetail);
+document.getElementById('detail-cancel').addEventListener('click', closeDetail);
+
+document.getElementById('form-detail').addEventListener('submit', async e => {
+    e.preventDefault();
+    const form = e.target;
+    const id = document.getElementById('detail-id').value;
+    if (!id) return;
+    hideMessage('detail-message');
+    const body = {
+        id,
+        category: form.category?.value?.trim() || 'VarMiner',
+        type: form.type?.value?.trim() || 'Report Requirements',
+        requirement: form.requirement?.value?.trim() || '',
+        description: form.description?.value?.trim() || '',
+        acceptanceCriteria: form.acceptanceCriteria?.value?.trim() || '',
+        clear: form.clear?.value || 'Yes',
+        estimate: form.estimate?.value?.trim() || '',
+        dependency: form.dependency?.value?.trim() || '—',
+        priority: form.priority?.value || 'High',
+        stackRank: form.stackRank?.value?.trim() || '',
+        status: form.status?.value || 'Not started',
+        startSprint: form.startSprint?.value?.trim() || '',
+        targetSprint: form.targetSprint?.value?.trim() || '',
+        release: form.release?.value?.trim() || '',
+        requesteeDept: form.requesteeDept?.value?.trim() || '',
+        requestedBy: form.requestedBy?.value?.trim() || '',
+        assignee: form.assignee?.value?.trim() || '',
+        comments: form.comments?.value?.trim() || ''
+    };
+    if (!body.requirement) {
+        showMessage('detail-message', 'Requirement text is required.', 'error');
+        return;
+    }
+    try {
+        const res = await fetch(API + '/requirements/' + encodeURIComponent(id), {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) {
+            const err = await res.text();
+            throw new Error(err || 'Save failed');
+        }
+        showMessage('detail-message', 'Saved.', 'success');
+        allRequirements = await fetchRequirements();
+        renderBacklog();
+        refreshKpis();
+        setTimeout(closeDetail, 600);
+    } catch (err) {
+        showMessage('detail-message', err.message || 'Failed to save.', 'error');
+    }
+});
+
+document.querySelectorAll('.kpi-card.kpi-clickable').forEach(card => {
+    card.addEventListener('click', () => {
+        const status = card.getAttribute('data-status');
+        if (!status) return;
+        const filterStatus = document.getElementById('filter-status');
+        if (filterStatus) filterStatus.value = status;
+        setView('backlog');
+    });
+});
 
 function showUploadMessage(text, type) {
     const el = document.getElementById('upload-message');

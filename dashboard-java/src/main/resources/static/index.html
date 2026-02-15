@@ -57,23 +57,23 @@
                         <span class="kpi-value" id="kpi-total">—</span>
                         <span class="kpi-label">Total requirements</span>
                     </div>
-                    <div class="kpi-card">
+                    <div class="kpi-card kpi-clickable" data-status="Not started" title="Click to view tasks">
                         <span class="kpi-value" id="kpi-not-started">—</span>
                         <span class="kpi-label">Not started</span>
                     </div>
-                    <div class="kpi-card">
+                    <div class="kpi-card kpi-clickable" data-status="In DEV" title="Click to view tasks">
                         <span class="kpi-value" id="kpi-in-dev">—</span>
                         <span class="kpi-label">In DEV</span>
                     </div>
-                    <div class="kpi-card">
+                    <div class="kpi-card kpi-clickable" data-status="In UAT" title="Click to view tasks">
                         <span class="kpi-value" id="kpi-in-uat">—</span>
                         <span class="kpi-label">In UAT</span>
                     </div>
-                    <div class="kpi-card">
+                    <div class="kpi-card kpi-clickable" data-status="Dev completed" title="Click to view tasks">
                         <span class="kpi-value" id="kpi-dev-completed">—</span>
                         <span class="kpi-label">Dev completed</span>
                     </div>
-                    <div class="kpi-card">
+                    <div class="kpi-card kpi-clickable" data-status="Closed" title="Click to view tasks">
                         <span class="kpi-value" id="kpi-closed">—</span>
                         <span class="kpi-label">Closed</span>
                     </div>
@@ -250,10 +250,112 @@
                 </div>
                 <div class="detail-panel hidden" id="detail-panel">
                     <div class="detail-header">
-                        <h3 id="detail-title">Requirement detail</h3>
+                        <h3 id="detail-title">Edit requirement</h3>
                         <button type="button" class="btn-close" id="detail-close" aria-label="Close">×</button>
                     </div>
-                    <div id="detail-content" class="detail-content"></div>
+                    <form id="form-detail" class="form-capture form-detail">
+                        <input type="hidden" name="id" id="detail-id" />
+                        <div class="form-row">
+                            <label>Requirement <span class="req">*</span></label>
+                            <input type="text" name="requirement" required>
+                        </div>
+                        <div class="form-row">
+                            <label>Description</label>
+                            <textarea name="description" rows="3"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <label>Acceptance criteria</label>
+                            <textarea name="acceptanceCriteria" rows="2"></textarea>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <label>Category</label>
+                                <input type="text" name="category" placeholder="VarMiner">
+                            </div>
+                            <div class="form-row">
+                                <label>Type</label>
+                                <select name="type">
+                                    <option value="Report Requirements">Report Requirements</option>
+                                    <option value="API">API</option>
+                                    <option value="UI">UI</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label>Priority</label>
+                                <select name="priority">
+                                    <option value="Critical">Critical</option>
+                                    <option value="High">High</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="Low">Low</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label>Status</label>
+                                <select name="status">
+                                    <option value="Not started">Not started</option>
+                                    <option value="In DEV">In DEV</option>
+                                    <option value="In UAT">In UAT</option>
+                                    <option value="Dev completed">Dev completed</option>
+                                    <option value="Closed">Closed</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label>Estimate</label>
+                                <input type="text" name="estimate" placeholder="e.g. 8">
+                            </div>
+                            <div class="form-row">
+                                <label>Stack rank</label>
+                                <input type="text" name="stackRank" placeholder="1">
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <label>Requestee dept</label>
+                                <input type="text" name="requesteeDept" placeholder="e.g. CRT">
+                            </div>
+                            <div class="form-row">
+                                <label>Requested by</label>
+                                <input type="text" name="requestedBy" placeholder="Team or name">
+                            </div>
+                            <div class="form-row">
+                                <label>Assignee</label>
+                                <input type="text" name="assignee" placeholder="Name">
+                            </div>
+                            <div class="form-row">
+                                <label>Release</label>
+                                <input type="text" name="release" placeholder="e.g. Q3-2025">
+                            </div>
+                            <div class="form-row">
+                                <label>Start sprint</label>
+                                <input type="text" name="startSprint" placeholder="e.g. July H2">
+                            </div>
+                            <div class="form-row">
+                                <label>Target sprint</label>
+                                <input type="text" name="targetSprint" placeholder="e.g. Aug H2">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>Clear requirement?</label>
+                            <select name="clear">
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label>Dependency (IDs)</label>
+                            <input type="text" name="dependency" placeholder="e.g. VR-001, VR-002 or —">
+                        </div>
+                        <div class="form-row">
+                            <label>Comments</label>
+                            <textarea name="comments" rows="2" placeholder="Optional notes"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                            <button type="button" class="btn btn-secondary" id="detail-cancel">Cancel</button>
+                        </div>
+                    </form>
+                    <div id="detail-message" class="message hidden"></div>
                 </div>
             </section>
         </main>
