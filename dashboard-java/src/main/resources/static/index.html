@@ -61,25 +61,37 @@
                         <span class="kpi-value" id="kpi-total">—</span>
                         <span class="kpi-label">Total requirements</span>
                     </div>
-                    <div class="kpi-card kpi-clickable" data-status="Not started" title="Click to view tasks">
-                        <span class="kpi-value" id="kpi-not-started">—</span>
-                        <span class="kpi-label">Not started</span>
+                    <div class="kpi-card kpi-clickable" data-status="Not Started" title="Click to view tasks">
+                        <span class="kpi-value">—</span>
+                        <span class="kpi-label">Not Started</span>
                     </div>
-                    <div class="kpi-card kpi-clickable" data-status="In DEV" title="Click to view tasks">
-                        <span class="kpi-value" id="kpi-in-dev">—</span>
-                        <span class="kpi-label">In DEV</span>
+                    <div class="kpi-card kpi-clickable" data-status="In Dev" title="Click to view tasks">
+                        <span class="kpi-value">—</span>
+                        <span class="kpi-label">In Dev</span>
+                    </div>
+                    <div class="kpi-card kpi-clickable" data-status="Dev Completed" title="Click to view tasks">
+                        <span class="kpi-value">—</span>
+                        <span class="kpi-label">Dev Completed</span>
+                    </div>
+                    <div class="kpi-card kpi-clickable" data-status="In QA" title="Click to view tasks">
+                        <span class="kpi-value">—</span>
+                        <span class="kpi-label">In QA</span>
+                    </div>
+                    <div class="kpi-card kpi-clickable" data-status="QA Completed" title="Click to view tasks">
+                        <span class="kpi-value">—</span>
+                        <span class="kpi-label">QA Completed</span>
                     </div>
                     <div class="kpi-card kpi-clickable" data-status="In UAT" title="Click to view tasks">
-                        <span class="kpi-value" id="kpi-in-uat">—</span>
+                        <span class="kpi-value">—</span>
                         <span class="kpi-label">In UAT</span>
                     </div>
-                    <div class="kpi-card kpi-clickable" data-status="Dev completed" title="Click to view tasks">
-                        <span class="kpi-value" id="kpi-dev-completed">—</span>
-                        <span class="kpi-label">Dev completed</span>
+                    <div class="kpi-card kpi-clickable" data-status="Production Ready" title="Click to view tasks">
+                        <span class="kpi-value">—</span>
+                        <span class="kpi-label">Production Ready</span>
                     </div>
-                    <div class="kpi-card kpi-clickable" data-status="Closed" title="Click to view tasks">
-                        <span class="kpi-value" id="kpi-closed">—</span>
-                        <span class="kpi-label">Closed</span>
+                    <div class="kpi-card kpi-clickable" data-status="Released" title="Click to view tasks">
+                        <span class="kpi-value">—</span>
+                        <span class="kpi-label">Released</span>
                     </div>
                 </div>
                 <div class="charts-row">
@@ -140,11 +152,12 @@
                             <div class="form-row">
                                 <label>Type</label>
                                 <select name="type">
-                                    <option value="Report Requirements">Report Requirements</option>
-                                    <option value="API">API</option>
-                                    <option value="UI">UI</option>
-                                    <option value="Other">Other</option>
+                                    <option value="Functionality">Functionality</option>
+                                    <option value="Bug">Bug</option>
+                                    <option value="Report Requirement">Report Requirement</option>
                                     <option value="Adhoc">Adhoc</option>
+                                    <option value="Other">Other</option>
+                                    <option value="UI">UI</option>
                                 </select>
                             </div>
                             <div class="form-row">
@@ -159,11 +172,14 @@
                             <div class="form-row">
                                 <label>Status</label>
                                 <select name="status">
-                                    <option value="Not started">Not started</option>
-                                    <option value="In DEV">In DEV</option>
+                                    <option value="Not Started">Not Started</option>
+                                    <option value="In Dev">In Dev</option>
+                                    <option value="Dev Completed">Dev Completed</option>
+                                    <option value="In QA">In QA</option>
+                                    <option value="QA Completed">QA Completed</option>
                                     <option value="In UAT">In UAT</option>
-                                    <option value="Dev completed">Dev completed</option>
-                                    <option value="Closed">Closed</option>
+                                    <option value="Production Ready">Production Ready</option>
+                                    <option value="Released">Released</option>
                                 </select>
                             </div>
                             <div class="form-row">
@@ -232,20 +248,24 @@
                         <label>Status</label>
                         <select id="filter-status">
                             <option value="">All</option>
-                            <option value="Not started">Not started</option>
-                            <option value="In DEV">In DEV</option>
+                            <option value="Not Started">Not Started</option>
+                            <option value="In Dev">In Dev</option>
+                            <option value="Dev Completed">Dev Completed</option>
+                            <option value="In QA">In QA</option>
+                            <option value="QA Completed">QA Completed</option>
                             <option value="In UAT">In UAT</option>
-                            <option value="Dev completed">Dev completed</option>
-                            <option value="Closed">Closed</option>
+                            <option value="Production Ready">Production Ready</option>
+                            <option value="Released">Released</option>
                         </select>
                         <label>Type</label>
                         <select id="filter-type">
                             <option value="">All</option>
-                            <option value="Report Requirements">Report Requirements</option>
-                            <option value="API">API</option>
-                            <option value="UI">UI</option>
-                            <option value="Other">Other</option>
+                            <option value="Functionality">Functionality</option>
+                            <option value="Bug">Bug</option>
+                            <option value="Report Requirement">Report Requirement</option>
                             <option value="Adhoc">Adhoc</option>
+                            <option value="Other">Other</option>
+                            <option value="UI">UI</option>
                         </select>
                         <label>Priority</label>
                         <select id="filter-priority">
@@ -340,11 +360,12 @@
                             <div class="form-row">
                                 <label>Type</label>
                                 <select name="type">
-                                    <option value="Report Requirements">Report Requirements</option>
-                                    <option value="API">API</option>
-                                    <option value="UI">UI</option>
-                                    <option value="Other">Other</option>
+                                    <option value="Functionality">Functionality</option>
+                                    <option value="Bug">Bug</option>
+                                    <option value="Report Requirement">Report Requirement</option>
                                     <option value="Adhoc">Adhoc</option>
+                                    <option value="Other">Other</option>
+                                    <option value="UI">UI</option>
                                 </select>
                             </div>
                             <div class="form-row">
@@ -359,11 +380,14 @@
                             <div class="form-row">
                                 <label>Status</label>
                                 <select name="status">
-                                    <option value="Not started">Not started</option>
-                                    <option value="In DEV">In DEV</option>
+                                    <option value="Not Started">Not Started</option>
+                                    <option value="In Dev">In Dev</option>
+                                    <option value="Dev Completed">Dev Completed</option>
+                                    <option value="In QA">In QA</option>
+                                    <option value="QA Completed">QA Completed</option>
                                     <option value="In UAT">In UAT</option>
-                                    <option value="Dev completed">Dev completed</option>
-                                    <option value="Closed">Closed</option>
+                                    <option value="Production Ready">Production Ready</option>
+                                    <option value="Released">Released</option>
                                 </select>
                             </div>
                             <div class="form-row">

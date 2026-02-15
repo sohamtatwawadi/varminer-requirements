@@ -564,11 +564,14 @@ body {
     display: inline-block;
 }
 
-.status-Not\.started { background: var(--bg-input); color: var(--text-muted); }
-.status-In\.DEV { background: #dbeafe; color: var(--accent); }
+.status-Not\.Started { background: var(--bg-input); color: var(--text-muted); }
+.status-In\.Dev { background: #dbeafe; color: var(--accent); }
+.status-Dev\.Completed { background: #d1fae5; color: var(--success); }
+.status-In\.QA { background: #fef3c7; color: #b45309; }
+.status-QA\.Completed { background: #d1fae5; color: var(--success); }
 .status-In\.UAT { background: var(--warning-light); color: var(--warning); }
-.status-Dev\.completed { background: #d1fae5; color: var(--success); }
-.status-Closed { background: var(--success-light); color: var(--success); }
+.status-Production\.Ready { background: #dbeafe; color: var(--accent); }
+.status-Released { background: var(--success-light); color: var(--success); }
 
 /* Detail panel */
 .detail-panel {

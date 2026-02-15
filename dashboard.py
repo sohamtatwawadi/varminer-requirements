@@ -12,21 +12,29 @@ from pathlib import Path
 STREAMDIR = Path(__file__).resolve().parent
 CSV_PATH = STREAMDIR / "requirements.csv"
 
-# JIRA-style status flow (order for KPIs and display)
+# Status flow (order for KPIs and display)
 STATUS_ORDER = [
-    "Not started",
-    "In DEV",
+    "Not Started",
+    "In Dev",
+    "Dev Completed",
+    "In QA",
+    "QA Completed",
     "In UAT",
-    "Dev completed",
-    "Closed",
+    "Production Ready",
+    "Released",
 ]
 # Normalize legacy/alternate values to the above
 STATUS_ALIASES = {
-    "In progress": "In DEV",
-    "In Progress": "In DEV",
-    "To Do": "Not started",
-    "Not star...": "Not started",
-    "Done": "Closed",
+    "Not started": "Not Started",
+    "In DEV": "In Dev",
+    "In Dev": "In Dev",
+    "Dev completed": "Dev Completed",
+    "In UAT": "In UAT",
+    "Closed": "Released",
+    "In progress": "In Dev",
+    "In Progress": "In Dev",
+    "To Do": "Not Started",
+    "Done": "Released",
 }
 
 # -----------------------------------------------------------------------------
@@ -43,10 +51,10 @@ def load_requirements() -> pd.DataFrame:
     col = "Status"
     if col in df.columns:
         df[col] = df[col].str.strip()
-        df[col] = df[col].replace(STATUS_ALIASES).fillna("Not started")
+        df[col] = df[col].replace(STATUS_ALIASES).fillna("Not Started")
         # Coerce to allowed set
         allowed = set(STATUS_ORDER)
-        df.loc[~df[col].isin(allowed), col] = "Not started"
+        df.loc[~df[col].isin(allowed), col] = "Not Started"
     return df
 
 

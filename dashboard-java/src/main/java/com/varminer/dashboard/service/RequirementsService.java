@@ -24,14 +24,20 @@ import java.util.stream.Collectors;
 public class RequirementsService {
 
     private static final List<String> STATUS_ORDER = List.of(
-            "Not started", "In DEV", "In UAT", "Dev completed", "Closed"
+            "Not Started", "In Dev", "Dev Completed", "In QA", "QA Completed",
+            "In UAT", "Production Ready", "Released"
     );
-    private static final Map<String, String> STATUS_ALIASES = Map.of(
-            "In progress", "In DEV",
-            "In Progress", "In DEV",
-            "To Do", "Not started",
-            "Not star...", "Not started",
-            "Done", "Closed"
+    private static final Map<String, String> STATUS_ALIASES = Map.ofEntries(
+            Map.entry("Not started", "Not Started"),
+            Map.entry("In DEV", "In Dev"),
+            Map.entry("In Dev", "In Dev"),
+            Map.entry("Dev completed", "Dev Completed"),
+            Map.entry("In UAT", "In UAT"),
+            Map.entry("Closed", "Released"),
+            Map.entry("In progress", "In Dev"),
+            Map.entry("In Progress", "In Dev"),
+            Map.entry("To Do", "Not Started"),
+            Map.entry("Done", "Released")
     );
 
     @Value("${varminer.requirements.csv-path:}")
@@ -53,7 +59,7 @@ public class RequirementsService {
     }
 
     private String normalizeStatus(String status) {
-        if (status == null || status.isBlank()) return "Not started";
+        if (status == null || status.isBlank()) return "Not Started";
         String s = status.strip();
         return STATUS_ALIASES.getOrDefault(s, s);
     }
@@ -109,22 +115,17 @@ public class RequirementsService {
         List<Requirement> all = getAll();
         int total = all.size();
         Map<String, Long> countByStatus = all.stream()
-                .collect(Collectors.groupingBy(r -> r.getStatus() == null ? "Not started" : r.getStatus(), Collectors.counting()));
-        int notStarted = countByStatus.getOrDefault("Not started", 0L).intValue();
-        int inDev = countByStatus.getOrDefault("In DEV", 0L).intValue();
-        int inUat = countByStatus.getOrDefault("In UAT", 0L).intValue();
-        int devCompleted = countByStatus.getOrDefault("Dev completed", 0L).intValue();
-        int closed = countByStatus.getOrDefault("Closed", 0L).intValue();
+                .collect(Collectors.groupingBy(r -> r.getStatus() == null ? "Not Started" : r.getStatus(), Collectors.counting()));
         Map<String, Integer> byStatus = new LinkedHashMap<>();
         for (String s : STATUS_ORDER) {
             byStatus.put(s, countByStatus.getOrDefault(s, 0L).intValue());
         }
-        return new KpiSummary(total, notStarted, inDev, inUat, devCompleted, closed, byStatus);
+        return new KpiSummary(total, byStatus);
     }
 
     public Requirement add(Requirement req) {
         if (req.getStatus() == null || req.getStatus().isBlank()) {
-            req.setStatus("Not started");
+            req.setStatus("Not Started");
         } else {
             req.setStatus(normalizeStatus(req.getStatus()));
         }

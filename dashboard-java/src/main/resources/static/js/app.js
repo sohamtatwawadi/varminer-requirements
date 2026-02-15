@@ -65,27 +65,27 @@ async function fetchKpis() {
     return res.json();
 }
 
+const STATUS_LIST = ['Not Started', 'In Dev', 'Dev Completed', 'In QA', 'QA Completed', 'In UAT', 'Production Ready', 'Released'];
+
 async function refreshKpis() {
     try {
         const kpi = await fetchKpis();
-        document.getElementById('kpi-total').textContent = kpi.total;
-        document.getElementById('kpi-not-started').textContent = kpi.notStarted;
-        document.getElementById('kpi-in-dev').textContent = kpi.inDev;
-        document.getElementById('kpi-in-uat').textContent = kpi.inUat;
-        document.getElementById('kpi-dev-completed').textContent = kpi.devCompleted;
-        document.getElementById('kpi-closed').textContent = kpi.closed;
+        const totalEl = document.getElementById('kpi-total');
+        if (totalEl) totalEl.textContent = kpi.total;
+        document.querySelectorAll('.kpi-card[data-status]').forEach(card => {
+            const status = card.getAttribute('data-status');
+            const valEl = card.querySelector('.kpi-value');
+            if (valEl && status) valEl.textContent = (kpi.byStatus && kpi.byStatus[status]) != null ? kpi.byStatus[status] : '—';
+        });
     } catch (e) {
-        document.getElementById('kpi-total').textContent = '—';
-        document.getElementById('kpi-not-started').textContent = '—';
-        document.getElementById('kpi-in-dev').textContent = '—';
-        document.getElementById('kpi-in-uat').textContent = '—';
-        document.getElementById('kpi-dev-completed').textContent = '—';
-        document.getElementById('kpi-closed').textContent = '—';
+        const totalEl = document.getElementById('kpi-total');
+        if (totalEl) totalEl.textContent = '—';
+        document.querySelectorAll('.kpi-card[data-status] .kpi-value').forEach(el => { el.textContent = '—'; });
     }
 }
 
 const CHART_COLORS = {
-    status: ['#94a3b8', '#2563eb', '#f59e0b', '#10b981', '#059669'],
+    status: ['#94a3b8', '#2563eb', '#f59e0b', '#10b981', '#059669', '#8b5cf6', '#ec4899', '#14b8a6'],
     priority: ['#dc2626', '#2563eb', '#f59e0b', '#6b7280']
 };
 
@@ -115,8 +115,8 @@ function refreshCharts() {
         const clearCtx = document.getElementById('chart-clear');
         const releaseCtx = document.getElementById('chart-release');
         if (!statusCtx || !priorityCtx) return;
-        const statusLabels = ['Not started', 'In DEV', 'In UAT', 'Dev completed', 'Closed'];
-        const statusData = [kpi.notStarted, kpi.inDev, kpi.inUat, kpi.devCompleted, kpi.closed];
+        const statusLabels = STATUS_LIST;
+        const statusData = STATUS_LIST.map(s => (kpi.byStatus && kpi.byStatus[s]) || 0);
         chartStatus = new Chart(statusCtx, {
             type: 'pie',
             data: {
@@ -273,7 +273,7 @@ function renderBacklog() {
             <td>${escapeHtml((r.requirement || '').slice(0, 80))}${(r.requirement || '').length > 80 ? '…' : ''}</td>
             <td>${escapeHtml(r.type || '')}</td>
             <td>${escapeHtml(r.priority || '')}</td>
-            <td><span class="status ${statusClass(r.status)}">${escapeHtml(r.status || 'Not started')}</span></td>
+            <td><span class="status ${statusClass(r.status)}">${escapeHtml(r.status || 'Not Started')}</span></td>
             <td>${escapeHtml(r.estimate || '')}</td>
             <td>${escapeHtml(r.release || '')}</td>
             <td>${escapeHtml(r.requestedBy || '')}</td>
@@ -326,7 +326,7 @@ function renderQ1() {
             <td>${escapeHtml((r.requirement || '').slice(0, 80))}${(r.requirement || '').length > 80 ? '…' : ''}</td>
             <td>${escapeHtml(r.type || '')}</td>
             <td>${escapeHtml(r.priority || '')}</td>
-            <td><span class="status ${statusClass(r.status)}">${escapeHtml(r.status || 'Not started')}</span></td>
+            <td><span class="status ${statusClass(r.status)}">${escapeHtml(r.status || 'Not Started')}</span></td>
             <td>${escapeHtml(r.estimate || '')}</td>
             <td>${escapeHtml(r.release || '')}</td>
             <td>${escapeHtml(r.requestedBy || '')}</td>
@@ -349,9 +349,9 @@ function showDetail(req) {
     form.description.value = req.description || '';
     form.acceptanceCriteria.value = req.acceptanceCriteria || '';
     form.category.value = req.category || 'VarMiner';
-    form.type.value = req.type || 'Report Requirements';
+    form.type.value = req.type || 'Functionality';
     form.priority.value = req.priority || 'High';
-    form.status.value = req.status || 'Not started';
+    form.status.value = req.status || 'Not Started';
     form.estimate.value = req.estimate || '';
     form.stackRank.value = req.stackRank || '';
     form.requesteeDept.value = req.requesteeDept || '';
@@ -412,7 +412,7 @@ if (formCapture) formCapture.addEventListener('submit', async e => {
     const form = e.target;
     const body = {
         category: form.category?.value?.trim() || 'VarMiner',
-        type: form.type?.value?.trim() || 'Report Requirements',
+        type: form.type?.value?.trim() || 'Functionality',
         requirement: form.requirement?.value?.trim(),
         description: form.description?.value?.trim() || '',
         acceptanceCriteria: form.acceptanceCriteria?.value?.trim() || '',
@@ -421,7 +421,7 @@ if (formCapture) formCapture.addEventListener('submit', async e => {
         dependency: form.dependency?.value?.trim() || '—',
         priority: form.priority?.value || 'High',
         stackRank: form.stackRank?.value?.trim() || '',
-        status: form.status?.value || 'Not started',
+        status: form.status?.value || 'Not Started',
         startSprint: form.startSprint?.value?.trim() || '',
         targetSprint: form.targetSprint?.value?.trim() || '',
         release: form.release?.value?.trim() || '',
@@ -447,6 +447,8 @@ if (formCapture) formCapture.addEventListener('submit', async e => {
         showMessage('capture-message', 'Requirement saved. ID: ' + (await res.json()).id, 'success');
         form.reset();
         form.category.value = 'VarMiner';
+        form.type.value = 'Functionality';
+        form.status.value = 'Not Started';
         refreshKpis();
     } catch (err) {
         showMessage('capture-message', err.message || 'Failed to save.', 'error');
@@ -498,7 +500,7 @@ if (formDetail) formDetail.addEventListener('submit', async e => {
     const body = {
         id,
         category: form.category?.value?.trim() || 'VarMiner',
-        type: form.type?.value?.trim() || 'Report Requirements',
+        type: form.type?.value?.trim() || 'Functionality',
         requirement: form.requirement?.value?.trim() || '',
         description: form.description?.value?.trim() || '',
         acceptanceCriteria: form.acceptanceCriteria?.value?.trim() || '',
@@ -507,7 +509,7 @@ if (formDetail) formDetail.addEventListener('submit', async e => {
         dependency: form.dependency?.value?.trim() || '—',
         priority: form.priority?.value || 'High',
         stackRank: form.stackRank?.value?.trim() || '',
-        status: form.status?.value || 'Not started',
+        status: form.status?.value || 'Not Started',
         startSprint: form.startSprint?.value?.trim() || '',
         targetSprint: form.targetSprint?.value?.trim() || '',
         release: form.release?.value?.trim() || '',
