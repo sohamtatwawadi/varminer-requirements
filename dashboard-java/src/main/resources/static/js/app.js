@@ -21,10 +21,15 @@ const views = {
     q1: {
         title: 'Q1 2026',
         subtitle: 'Requirements scheduled for Q1 2026'
+    },
+    users: {
+        title: 'Manage users',
+        subtitle: 'Add and view users (Admin only)'
     }
 };
 
 let allRequirements = [];
+let currentUser = null;
 
 function setView(name) {
     document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
@@ -44,6 +49,7 @@ function setView(name) {
     }
     if (name === 'backlog') renderBacklog();
     if (name === 'q1') renderQ1();
+    if (name === 'users') renderUsers();
 }
 
 function showMessage(elId, text, type) {
@@ -615,14 +621,84 @@ if (uploadZone) {
     });
 }
 
+async function fetchMe() {
+    try {
+        const res = await fetch(API + '/me', { credentials: 'include' });
+        if (res.ok) currentUser = await res.json();
+        else currentUser = null;
+    } catch (e) { currentUser = null; }
+    return currentUser;
+}
+
+async function renderUsers() {
+    const tbody = document.getElementById('users-tbody');
+    if (!tbody) return;
+    try {
+        const res = await fetch(API + '/users', { credentials: 'include' });
+        if (!res.ok) {
+            tbody.innerHTML = '<tr><td colspan="2">Not authorized. Admin only.</td></tr>';
+            return;
+        }
+        const list = await res.json();
+        tbody.innerHTML = list.map(u => `<tr><td>${escapeHtml(u.username)}</td><td>${escapeHtml(u.role)}</td></tr>`).join('');
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="2">Failed to load.</td></tr>';
+    }
+}
+
+const formAddUser = document.getElementById('form-add-user');
+if (formAddUser) formAddUser.addEventListener('submit', async e => {
+    e.preventDefault();
+    const form = e.target;
+    const username = form.username?.value?.trim();
+    const password = form.password?.value;
+    const msgEl = document.getElementById('users-message');
+    if (!msgEl) return;
+    msgEl.classList.add('hidden');
+    if (!username || !password) {
+        msgEl.textContent = 'Username and password required.';
+        msgEl.className = 'message error';
+        msgEl.classList.remove('hidden');
+        return;
+    }
+    try {
+        const res = await fetch(API + '/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            msgEl.textContent = data.error || 'Failed to add user.';
+            msgEl.className = 'message error';
+            msgEl.classList.remove('hidden');
+            return;
+        }
+        msgEl.textContent = 'User added.';
+        msgEl.className = 'message success';
+        msgEl.classList.remove('hidden');
+        form.reset();
+        renderUsers();
+    } catch (err) {
+        msgEl.textContent = err.message || 'Failed to add user.';
+        msgEl.className = 'message error';
+        msgEl.classList.remove('hidden');
+    }
+});
+
 // Initial load - run after DOM is ready so production (and CDN/cache) always has elements
-function init() {
+async function init() {
+    const me = await fetchMe();
+    const footerUser = document.getElementById('footer-user');
+    if (footerUser) footerUser.textContent = me ? 'Logged in as ' + me.username : '—';
+    if (me && me.role === 'ADMIN') document.querySelector('.nav-item-users')?.classList.remove('hidden');
     refreshKpis();
     loadBacklog();
     setView('dashboard');
 }
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => init());
 } else {
     init();
 }

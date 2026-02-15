@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.PostConstruct;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -108,6 +109,24 @@ public class RequirementsService {
             return readAll();
         } catch (IOException e) {
             throw new RuntimeException("Failed to read requirements", e);
+        }
+    }
+
+    public List<Requirement> getByQ1Release() {
+        return getAll().stream()
+                .filter(r -> (r.getRelease() != null && r.getRelease().toLowerCase().contains("q1")))
+                .collect(Collectors.toList());
+    }
+
+    public String toCsv(List<Requirement> list) {
+        try (StringWriter sw = new StringWriter()) {
+            StatefulBeanToCsv<Requirement> writer = new StatefulBeanToCsvBuilder<Requirement>(sw)
+                    .withApplyQuotesToAll(false)
+                    .build();
+            writer.write(list);
+            return sw.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to export CSV", e);
         }
     }
 

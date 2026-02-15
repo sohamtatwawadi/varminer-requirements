@@ -8,9 +8,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
 import java.io.IOException;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -26,6 +29,17 @@ public class RequirementsController {
     @GetMapping("/requirements")
     public List<Requirement> getAll() {
         return requirementsService.getAll();
+    }
+
+    @GetMapping(value = "/requirements/export", produces = "text/csv")
+    public ResponseEntity<String> exportCsv(@RequestParam(required = false) String view) {
+        List<Requirement> list = "q1".equalsIgnoreCase(view)
+            ? requirementsService.getByQ1Release()
+            : requirementsService.getAll();
+        String csv = requirementsService.toCsv(list);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentDispositionFormData("attachment", "requirements.csv");
+        return ResponseEntity.ok().headers(headers).contentType(MediaType.parseMediaType("text/csv")).body(csv);
     }
 
     @GetMapping("/kpis")

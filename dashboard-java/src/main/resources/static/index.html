@@ -33,10 +33,14 @@
                     <span class="nav-icon">Q1</span>
                     <span>2026</span>
                 </a>
+                <a href="#" class="nav-item nav-item-users hidden" data-view="users" title="Manage users (Admin)">
+                    <span class="nav-icon">👥</span>
+                    <span>Manage users</span>
+                </a>
             </nav>
             <div class="sidebar-footer">
-                <span class="footer-label">Requirements</span>
-                <span class="footer-meta">CSV-backed</span>
+                <span class="footer-label" id="footer-user">—</span>
+                <a href="/logout" class="footer-meta" style="color: var(--text-muted); text-decoration: none;">Logout</a>
             </div>
         </aside>
         <main class="main">
@@ -245,6 +249,7 @@
             <section class="view hidden" id="view-backlog">
                 <div class="toolbar">
                     <div class="filters">
+                        <a href="/api/requirements/export" class="btn btn-secondary" download="requirements.csv" style="margin-right: 1rem;">Download CSV</a>
                         <label>Status</label>
                         <select id="filter-status">
                             <option value="">All</option>
@@ -310,6 +315,9 @@
 
             <!-- Q1 2026 Backlog (requirements with Release containing Q1) -->
             <section class="view hidden" id="view-q1">
+                <div class="toolbar" style="margin-bottom: 1rem;">
+                    <a href="/api/requirements/export?view=q1" class="btn btn-secondary" download="q1-2026-requirements.csv">Download CSV</a>
+                </div>
                 <p class="hint q1-hint">Requirements scheduled for <strong>Q1 2026</strong> (Release contains &ldquo;Q1&rdquo;). Click a row to edit or delete.</p>
                 <div class="card table-card">
                     <div class="table-wrap">
@@ -327,6 +335,39 @@
                                 </tr>
                             </thead>
                             <tbody id="q1-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Manage users (Admin only) -->
+            <section class="view hidden" id="view-users">
+                <div class="card form-card" style="max-width: 480px;">
+                    <h2 class="card-title">Add user</h2>
+                    <p class="hint">Only the admin can add new users. New users will have access to the dashboard.</p>
+                    <form id="form-add-user" class="form-capture">
+                        <div class="form-row">
+                            <label>Username (ID)</label>
+                            <input type="text" name="username" placeholder="e.g. john.doe" required>
+                        </div>
+                        <div class="form-row">
+                            <label>Password</label>
+                            <input type="password" name="password" placeholder="Min 4 characters" required minlength="4">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Add user</button>
+                        </div>
+                    </form>
+                    <div id="users-message" class="message hidden"></div>
+                </div>
+                <div class="card table-card" style="margin-top: 1.5rem;">
+                    <h3 style="margin: 0 0 1rem;">Users</h3>
+                    <div class="table-wrap">
+                        <table class="backlog-table">
+                            <thead>
+                                <tr><th>Username</th><th>Role</th></tr>
+                            </thead>
+                            <tbody id="users-tbody"></tbody>
                         </table>
                     </div>
                 </div>
