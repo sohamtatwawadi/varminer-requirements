@@ -189,6 +189,22 @@ public class RequirementsService {
     }
 
     /**
+     * Delete a requirement by ID. Returns true if found and removed.
+     */
+    public boolean delete(String id) {
+        List<Requirement> all = getAll();
+        boolean removed = all.removeIf(r -> id.equals(r.getId()));
+        if (removed) {
+            try {
+                writeAll(all);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to delete requirement", e);
+            }
+        }
+        return removed;
+    }
+
+    /**
      * Replace all requirements with rows parsed from the given CSV input.
      * Uses same column mapping as our CSV (ID, Category, Type, Requirement, etc.).
      * Normalizes status (e.g. "In Progress" -> "In DEV").

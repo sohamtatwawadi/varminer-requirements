@@ -98,6 +98,30 @@ body {
     color: var(--accent);
 }
 
+.nav-item-q1 {
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.nav-item-q1 .nav-icon {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    opacity: 1;
+}
+
+.nav-item-q1:hover {
+    background: rgba(59, 130, 246, 0.14);
+    color: var(--accent);
+}
+
+.nav-item-q1.active {
+    background: var(--accent-light);
+    color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+}
+
 .nav-icon {
     font-size: 1.1rem;
     opacity: 0.9;
@@ -258,6 +282,7 @@ body {
 .chart-container {
     position: relative;
     height: 260px;
+    cursor: pointer;
 }
 
 /* Upload CSV */
@@ -319,6 +344,12 @@ body {
 .dashboard-extra .hint {
     color: var(--text-muted);
     font-size: 0.9rem;
+}
+
+.q1-hint {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
 }
 
 /* Card & form */
@@ -418,6 +449,16 @@ body {
 
 .btn-secondary:hover {
     background: var(--border);
+}
+
+.btn-danger {
+    background: var(--danger, #dc2626);
+    color: #fff;
+    margin-left: auto;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
 }
 
 .message {

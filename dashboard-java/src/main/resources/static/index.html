@@ -29,6 +29,10 @@
                     <span class="nav-icon">≡</span>
                     <span>Product backlog</span>
                 </a>
+                <a href="#" class="nav-item nav-item-q1" data-view="q1" title="Q1 2026 requirements">
+                    <span class="nav-icon">Q1</span>
+                    <span>2026</span>
+                </a>
             </nav>
             <div class="sidebar-footer">
                 <span class="footer-label">Requirements</span>
@@ -92,8 +96,22 @@
                         </div>
                     </div>
                 </div>
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <h3>Clear requirement</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-clear"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Release schedule</h3>
+                        <div class="chart-container">
+                            <canvas id="chart-release"></canvas>
+                        </div>
+                    </div>
+                </div>
                 <div class="dashboard-extra">
-                    <p class="hint">Use <strong>Capture requirement</strong> to add new items; use <strong>Product backlog</strong> to view and filter the full list.</p>
+                    <p class="hint">Click any KPI or chart segment to view filtered requirements in the backlog. Use <strong>Capture requirement</strong> to add new items; use <strong>Product backlog</strong> to view and filter the full list.</p>
                 </div>
             </section>
 
@@ -126,6 +144,7 @@
                                     <option value="API">API</option>
                                     <option value="UI">UI</option>
                                     <option value="Other">Other</option>
+                                    <option value="Adhoc">Adhoc</option>
                                 </select>
                             </div>
                             <div class="form-row">
@@ -219,6 +238,15 @@
                             <option value="Dev completed">Dev completed</option>
                             <option value="Closed">Closed</option>
                         </select>
+                        <label>Type</label>
+                        <select id="filter-type">
+                            <option value="">All</option>
+                            <option value="Report Requirements">Report Requirements</option>
+                            <option value="API">API</option>
+                            <option value="UI">UI</option>
+                            <option value="Other">Other</option>
+                            <option value="Adhoc">Adhoc</option>
+                        </select>
                         <label>Priority</label>
                         <select id="filter-priority">
                             <option value="">All</option>
@@ -226,6 +254,16 @@
                             <option value="High">High</option>
                             <option value="Medium">Medium</option>
                             <option value="Low">Low</option>
+                        </select>
+                        <label>Clear req.</label>
+                        <select id="filter-clear">
+                            <option value="">All</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                        </select>
+                        <label>Release</label>
+                        <select id="filter-release">
+                            <option value="">All</option>
                         </select>
                     </div>
                 </div>
@@ -248,7 +286,34 @@
                         </table>
                     </div>
                 </div>
-                <div class="detail-panel hidden" id="detail-panel">
+            </section>
+
+            <!-- Q1 2026 Backlog (requirements with Release containing Q1) -->
+            <section class="view hidden" id="view-q1">
+                <p class="hint q1-hint">Requirements scheduled for <strong>Q1 2026</strong> (Release contains &ldquo;Q1&rdquo;). Click a row to edit or delete.</p>
+                <div class="card table-card">
+                    <div class="table-wrap">
+                        <table class="backlog-table" id="q1-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Requirement</th>
+                                    <th>Type</th>
+                                    <th>Priority</th>
+                                    <th>Status</th>
+                                    <th>Estimate</th>
+                                    <th>Release</th>
+                                    <th>Requested by</th>
+                                </tr>
+                            </thead>
+                            <tbody id="q1-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Shared detail panel (used by Product backlog and Q1 Backlog) -->
+            <div class="detail-panel hidden" id="detail-panel">
                     <div class="detail-header">
                         <h3 id="detail-title">Edit requirement</h3>
                         <button type="button" class="btn-close" id="detail-close" aria-label="Close">×</button>
@@ -279,6 +344,7 @@
                                     <option value="API">API</option>
                                     <option value="UI">UI</option>
                                     <option value="Other">Other</option>
+                                    <option value="Adhoc">Adhoc</option>
                                 </select>
                             </div>
                             <div class="form-row">
@@ -353,11 +419,11 @@
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Save changes</button>
                             <button type="button" class="btn btn-secondary" id="detail-cancel">Cancel</button>
+                            <button type="button" class="btn btn-danger" id="detail-delete">Delete requirement</button>
                         </div>
                     </form>
                     <div id="detail-message" class="message hidden"></div>
                 </div>
-            </section>
         </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>

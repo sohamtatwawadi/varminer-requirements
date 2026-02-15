@@ -45,6 +45,13 @@ public class RequirementsController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @DeleteMapping("/requirements/{id}")
+    public ResponseEntity<?> delete(@PathVariable String id) {
+        return requirementsService.delete(id)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
     @PostMapping("/requirements/upload")
     public ResponseEntity<?> uploadCsv(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
