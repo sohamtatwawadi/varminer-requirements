@@ -405,7 +405,8 @@ document.querySelectorAll('.nav-item').forEach(el => {
     });
 });
 
-document.getElementById('form-capture').addEventListener('submit', async e => {
+const formCapture = document.getElementById('form-capture');
+if (formCapture) formCapture.addEventListener('submit', async e => {
     e.preventDefault();
     hideMessage('capture-message');
     const form = e.target;
@@ -452,15 +453,23 @@ document.getElementById('form-capture').addEventListener('submit', async e => {
     }
 });
 
-document.getElementById('filter-status').addEventListener('change', () => renderBacklog());
-document.getElementById('filter-type').addEventListener('change', () => renderBacklog());
-document.getElementById('filter-priority').addEventListener('change', () => renderBacklog());
-document.getElementById('filter-clear').addEventListener('change', () => renderBacklog());
-document.getElementById('filter-release').addEventListener('change', () => renderBacklog());
-document.getElementById('detail-close').addEventListener('click', closeDetail);
-document.getElementById('detail-cancel').addEventListener('click', closeDetail);
+const filterStatus = document.getElementById('filter-status');
+const filterType = document.getElementById('filter-type');
+const filterPriority = document.getElementById('filter-priority');
+const filterClear = document.getElementById('filter-clear');
+const filterRelease = document.getElementById('filter-release');
+if (filterStatus) filterStatus.addEventListener('change', () => renderBacklog());
+if (filterType) filterType.addEventListener('change', () => renderBacklog());
+if (filterPriority) filterPriority.addEventListener('change', () => renderBacklog());
+if (filterClear) filterClear.addEventListener('change', () => renderBacklog());
+if (filterRelease) filterRelease.addEventListener('change', () => renderBacklog());
+const detailClose = document.getElementById('detail-close');
+const detailCancel = document.getElementById('detail-cancel');
+if (detailClose) detailClose.addEventListener('click', closeDetail);
+if (detailCancel) detailCancel.addEventListener('click', closeDetail);
 
-document.getElementById('detail-delete').addEventListener('click', async () => {
+const detailDelete = document.getElementById('detail-delete');
+if (detailDelete) detailDelete.addEventListener('click', async () => {
     const id = document.getElementById('detail-id').value;
     if (!id) return;
     if (!confirm('Delete this requirement? This cannot be undone.')) return;
@@ -479,7 +488,8 @@ document.getElementById('detail-delete').addEventListener('click', async () => {
     }
 });
 
-document.getElementById('form-detail').addEventListener('submit', async e => {
+const formDetail = document.getElementById('form-detail');
+if (formDetail) formDetail.addEventListener('submit', async e => {
     e.preventDefault();
     const form = e.target;
     const id = document.getElementById('detail-id').value;
@@ -532,17 +542,21 @@ document.getElementById('form-detail').addEventListener('submit', async e => {
     }
 });
 
-document.querySelectorAll('.kpi-card.kpi-clickable').forEach(card => {
-    card.addEventListener('click', () => {
+const kpiGrid = document.getElementById('kpi-grid');
+if (kpiGrid) {
+    kpiGrid.addEventListener('click', function(e) {
+        const card = e.target.closest('.kpi-card.kpi-clickable');
+        if (!card) return;
+        e.preventDefault();
         const status = card.getAttribute('data-status');
         const type = card.getAttribute('data-type');
-        const filterStatus = document.getElementById('filter-status');
-        const filterType = document.getElementById('filter-type');
-        if (filterStatus) filterStatus.value = status !== null ? status : '';
-        if (filterType) filterType.value = type !== null ? type : '';
+        const filterStatusEl = document.getElementById('filter-status');
+        const filterTypeEl = document.getElementById('filter-type');
+        if (filterStatusEl) filterStatusEl.value = status !== null ? status : '';
+        if (filterTypeEl) filterTypeEl.value = type !== null ? type : '';
         setView('backlog');
     });
-});
+}
 
 function showUploadMessage(text, type) {
     const el = document.getElementById('upload-message');
@@ -579,7 +593,8 @@ async function uploadCsv(file) {
     }
 }
 
-document.getElementById('csv-file').addEventListener('change', e => {
+const csvFile = document.getElementById('csv-file');
+if (csvFile) csvFile.addEventListener('change', e => {
     const file = e.target.files && e.target.files[0];
     if (file) uploadCsv(file);
     e.target.value = '';
@@ -598,7 +613,14 @@ if (uploadZone) {
     });
 }
 
-// Initial load
-refreshKpis();
-loadBacklog();
-setView('dashboard');
+// Initial load - run after DOM is ready so production (and CDN/cache) always has elements
+function init() {
+    refreshKpis();
+    loadBacklog();
+    setView('dashboard');
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
