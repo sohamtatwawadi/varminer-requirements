@@ -149,8 +149,16 @@ body {
 /* Main */
 .main {
     flex: 1;
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     padding: 2rem 2.5rem;
+}
+.main-content-wrap {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    gap: 0;
 }
 
 .main-header {
@@ -557,6 +565,12 @@ body {
     color: var(--accent);
 }
 
+.backlog-table .comments-cell {
+    max-width: 180px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
 .backlog-table .status {
     font-size: 0.8rem;
     padding: 0.2rem 0.5rem;
@@ -573,7 +587,13 @@ body {
 .status-Production\.Ready { background: #dbeafe; color: var(--accent); }
 .status-Released { background: var(--success-light); color: var(--success); }
 
-/* Detail panel */
+/* Main view (left side when edit panel is open) */
+.main-view {
+    flex: 1;
+    min-width: 0;
+    overflow: auto;
+}
+
 .detail-panel {
     margin-top: 1.5rem;
     background: var(--bg-card);
@@ -583,8 +603,33 @@ body {
     box-shadow: var(--shadow-card);
 }
 
+/* Half-page edit form on the right (Product backlog & Q1 tab) */
+.detail-panel-half {
+    margin: 0;
+    width: 50%;
+    min-width: 320px;
+    max-width: 520px;
+    flex-shrink: 0;
+    border-radius: 0;
+    border-left: 1px solid var(--border);
+    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+    overflow-y: auto;
+    transition: width 0.25s ease, min-width 0.25s ease;
+}
+.detail-panel-half.hidden {
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
+    padding: 0;
+    border-left: none;
+    box-shadow: none;
+}
+
 .detail-panel.hidden {
     display: none;
+}
+.detail-panel-half.hidden {
+    display: block; /* keep in layout so width transition works; width: 0 hides it */
 }
 
 .detail-header {
@@ -612,6 +657,46 @@ body {
 
 .btn-close:hover {
     color: var(--text);
+}
+
+/* Edit column and pencil button (backlog table) */
+.col-edit {
+    width: 2.5rem;
+    text-align: center;
+    padding: 0.5rem;
+}
+.btn-edit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+}
+.btn-edit:hover {
+    color: var(--accent);
+    background: var(--bg-hover);
+}
+.btn-edit svg {
+    width: 1rem;
+    height: 1rem;
+}
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 .detail-content .detail-row {
@@ -644,6 +729,136 @@ body {
     }
 }
 
+/* View-level KPIs and charts (all tabs) */
+.view-kpi-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+.view-kpi-row .kpi-card {
+    padding: 0.75rem 1rem;
+}
+.view-kpi-row .kpi-value { font-size: 1.5rem; }
+.view-charts-row .chart-container { height: 220px; }
+
+/* Dashboard summary */
+.dashboard-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+.summary-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    box-shadow: var(--shadow-card);
+}
+.summary-card h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.summary-value { font-size: 1.1rem; font-weight: 600; }
+.summary-list { margin: 0; padding-left: 1.2rem; font-size: 0.9rem; }
+.summary-list li { margin-bottom: 0.25rem; }
+
+.toolbar-search {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    min-width: 160px;
+    font-size: 0.9rem;
+}
+
+/* Roadmap */
+.roadmap-months {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+.roadmap-month {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    box-shadow: var(--shadow-card);
+}
+.roadmap-month h3 { margin: 0 0 0.75rem; font-size: 1rem; color: var(--text-muted); }
+.roadmap-month .req-card {
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.5rem;
+    background: var(--bg-input);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+.roadmap-month .req-card:hover { background: var(--border); }
+
+/* Releases / Upcoming */
+.releases-cards { display: flex; flex-direction: column; gap: 1rem; }
+.release-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    box-shadow: var(--shadow-card);
+}
+.release-card h3 { margin: 0 0 0.5rem; }
+.release-card .meta { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+.release-card .readiness { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.8rem; }
+.release-card-clickable { cursor: pointer; transition: background 0.15s, box-shadow 0.15s; }
+.release-card-clickable:hover { background: var(--bg-input); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
+
+/* Priorities tabs */
+.priorities-tabs {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+}
+.priorities-tab {
+    padding: 0.6rem 1.25rem;
+    border: none;
+    border-bottom: 3px solid transparent;
+    background: none;
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: -1px;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+.priorities-tab:hover { color: var(--text); background: var(--bg-input); }
+.priorities-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
+.priority-sets-list { display: flex; flex-direction: column; gap: 1rem; }
+.priority-set-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+}
+.priority-set-card.priority-set-card-clickable { cursor: pointer; transition: background 0.15s, box-shadow 0.15s; }
+.priority-set-card.priority-set-card-clickable:hover { background: var(--bg-input); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
+.meetings-list { display: flex; flex-direction: column; gap: 1rem; }
+.meeting-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+}
+.meeting-card-clickable { cursor: pointer; transition: background 0.15s, box-shadow 0.15s; }
+.meeting-card-clickable:hover { background: var(--bg-input); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
+
 @media (max-width: 600px) {
     .sidebar {
         width: 72px;
@@ -660,4 +875,5 @@ body {
     .main {
         padding: 1.25rem;
     }
+    .roadmap-months { grid-template-columns: 1fr; }
 }

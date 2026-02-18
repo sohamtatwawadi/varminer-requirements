@@ -33,6 +33,26 @@
                     <span class="nav-icon">Q1</span>
                     <span>2026</span>
                 </a>
+                <a href="#" class="nav-item" data-view="roadmap" title="Roadmap by month">
+                    <span class="nav-icon">🗓</span>
+                    <span>Roadmap</span>
+                </a>
+                <a href="#" class="nav-item" data-view="upcoming-releases">
+                    <span class="nav-icon">📦</span>
+                    <span>Upcoming Releases</span>
+                </a>
+                <a href="#" class="nav-item" data-view="priorities">
+                    <span class="nav-icon">★</span>
+                    <span>Priorities</span>
+                </a>
+                <a href="#" class="nav-item" data-view="releases">
+                    <span class="nav-icon">📋</span>
+                    <span>Releases</span>
+                </a>
+                <a href="#" class="nav-item" data-view="meetings">
+                    <span class="nav-icon">📅</span>
+                    <span>Meetings</span>
+                </a>
                 <a href="#" class="nav-item nav-item-users hidden" data-view="users" title="Manage users (Admin)">
                     <span class="nav-icon">👥</span>
                     <span>Manage users</span>
@@ -44,6 +64,8 @@
             </div>
         </aside>
         <main class="main">
+            <div class="main-content-wrap">
+                <div class="main-view">
             <header class="main-header">
                 <h1 class="page-title" data-title>Dashboard</h1>
                 <p class="page-subtitle" data-subtitle>Overview and KPIs</p>
@@ -125,6 +147,12 @@
                             <canvas id="chart-release"></canvas>
                         </div>
                     </div>
+                </div>
+                <div class="dashboard-summary-grid" id="dashboard-summary">
+                    <div class="summary-card"><h4>This month shipments</h4><div id="summary-shipments" class="summary-list">—</div></div>
+                    <div class="summary-card"><h4>Next release countdown</h4><div id="summary-countdown" class="summary-value">—</div></div>
+                    <div class="summary-card"><h4>Top 5 priorities</h4><ul id="summary-priorities" class="summary-list">—</ul></div>
+                    <div class="summary-card"><h4>Open action items</h4><ul id="summary-actions" class="summary-list">—</ul></div>
                 </div>
                 <div class="dashboard-extra">
                     <p class="hint">Click any KPI or chart segment to view filtered requirements in the backlog. Use <strong>Capture requirement</strong> to add new items; use <strong>Product backlog</strong> to view and filter the full list.</p>
@@ -245,11 +273,19 @@
                 <div id="capture-message" class="message hidden"></div>
             </section>
 
-            <!-- Product backlog -->
+            <!-- Product backlog (executive columns + quick filters, search, saved views) -->
             <section class="view hidden" id="view-backlog">
                 <div class="toolbar">
                     <div class="filters">
                         <a href="/api/requirements/export" class="btn btn-secondary" download="requirements.csv" style="margin-right: 1rem;">Download CSV</a>
+                        <input type="text" id="backlog-search" placeholder="Search…" class="toolbar-search">
+                        <label>Saved view</label>
+                        <select id="saved-view">
+                            <option value="">Default</option>
+                            <option value="critical">Critical only</option>
+                            <option value="not-started">Not started</option>
+                            <option value="in-progress">In progress</option>
+                        </select>
                         <label>Status</label>
                         <select id="filter-status">
                             <option value="">All</option>
@@ -302,9 +338,13 @@
                                     <th>Type</th>
                                     <th>Priority</th>
                                     <th>Status</th>
-                                    <th>Estimate</th>
-                                    <th>Release</th>
-                                    <th>Requested by</th>
+                                    <th>Release month</th>
+                                    <th>Assignee</th>
+                                    <th>Target sprint</th>
+                                    <th>Dep.</th>
+                                    <th>Updated</th>
+                                    <th>Comments</th>
+                                    <th class="col-edit" title="Edit"><span class="sr-only">Edit</span></th>
                                 </tr>
                             </thead>
                             <tbody id="backlog-tbody"></tbody>
@@ -318,7 +358,16 @@
                 <div class="toolbar" style="margin-bottom: 1rem;">
                     <a href="/api/requirements/export?view=q1" class="btn btn-secondary" download="q1-2026-requirements.csv">Download CSV</a>
                 </div>
-                <p class="hint q1-hint">Requirements scheduled for <strong>Q1 2026</strong> (Release contains &ldquo;Q1&rdquo;). Click a row to edit or delete.</p>
+                <div class="view-kpi-row" id="q1-kpis">
+                    <div class="kpi-card"><span class="kpi-value" id="q1-kpi-total">—</span><span class="kpi-label">Total Q1</span></div>
+                    <div class="kpi-card"><span class="kpi-value" id="q1-kpi-not-started">—</span><span class="kpi-label">Not started</span></div>
+                    <div class="kpi-card"><span class="kpi-value" id="q1-kpi-released">—</span><span class="kpi-label">Released</span></div>
+                </div>
+                <div class="charts-row view-charts-row">
+                    <div class="chart-card"><h3>Q1 by status</h3><div class="chart-container"><canvas id="chart-q1-status"></canvas></div></div>
+                    <div class="chart-card"><h3>Q1 by priority</h3><div class="chart-container"><canvas id="chart-q1-priority"></canvas></div></div>
+                </div>
+                <p class="hint q1-hint">Requirements scheduled for <strong>Q1 2026</strong> (Release contains &ldquo;Q1&rdquo;). Click the edit icon to open the form on the right.</p>
                 <div class="card table-card">
                     <div class="table-wrap">
                         <table class="backlog-table" id="q1-table">
@@ -332,12 +381,276 @@
                                     <th>Estimate</th>
                                     <th>Release</th>
                                     <th>Requested by</th>
+                                    <th class="col-edit" title="Edit"><span class="sr-only">Edit</span></th>
                                 </tr>
                             </thead>
                             <tbody id="q1-tbody"></tbody>
                         </table>
                     </div>
                 </div>
+            </section>
+
+            <!-- Roadmap Q1 month-wise -->
+            <section class="view hidden" id="view-roadmap">
+                <div class="toolbar">
+                    <label>Quarter</label>
+                    <select id="roadmap-quarter">
+                        <option value="Q1">Q1</option>
+                        <option value="Q2">Q2</option>
+                        <option value="Q3">Q3</option>
+                    </select>
+                    <label>Year</label>
+                    <select id="roadmap-year"></select>
+                </div>
+                <div class="view-kpi-row" id="roadmap-kpis">
+                    <div class="kpi-card"><span class="kpi-value" id="roadmap-kpi-total">—</span><span class="kpi-label">Total in quarter</span></div>
+                    <div class="kpi-card"><span class="kpi-value" id="roadmap-kpi-o1">—</span><span class="kpi-label">O1</span></div>
+                    <div class="kpi-card"><span class="kpi-value" id="roadmap-kpi-o2">—</span><span class="kpi-label">O2</span></div>
+                    <div class="kpi-card"><span class="kpi-value" id="roadmap-kpi-o3">—</span><span class="kpi-label">O3</span></div>
+                </div>
+                <div class="charts-row view-charts-row">
+                    <div class="chart-card"><h3>Requirements by month</h3><div class="chart-container"><canvas id="chart-roadmap-bar"></canvas></div></div>
+                </div>
+                <div id="roadmap-months" class="roadmap-months"></div>
+            </section>
+
+            <!-- Upcoming Releases -->
+            <section class="view hidden" id="view-upcoming-releases">
+                <div class="toolbar">
+                    <button type="button" class="btn btn-primary" id="upcoming-add-release">Add release</button>
+                    <button type="button" class="btn btn-secondary" id="upcoming-refresh">Refresh</button>
+                </div>
+                <p class="hint" style="margin-bottom: 1rem;">Releases with <strong>no release date</strong> or a <strong>future release date</strong> appear here. Add or edit releases in <strong>Releases</strong>; they show here automatically until they are marked released.</p>
+                <div class="view-kpi-row" id="upcoming-kpis">
+                    <div class="kpi-card"><span class="kpi-value" id="upcoming-kpi-count">—</span><span class="kpi-label">Upcoming releases</span></div>
+                    <div class="kpi-card"><span class="kpi-value" id="upcoming-kpi-reqs">—</span><span class="kpi-label">Total requirements</span></div>
+                </div>
+                <div class="charts-row view-charts-row">
+                    <div class="chart-card"><h3>Requirements per release</h3><div class="chart-container"><canvas id="chart-upcoming-bar"></canvas></div></div>
+                </div>
+                <div id="upcoming-releases-list" class="releases-cards"></div>
+            </section>
+
+            <!-- Priorities (Week / Month / Quarter / Custom tabs, tag backlog items) -->
+            <section class="view hidden" id="view-priorities">
+                <div class="priorities-tabs" role="tablist">
+                    <button type="button" class="priorities-tab active" data-timeframe="week">Week</button>
+                    <button type="button" class="priorities-tab" data-timeframe="month">Month</button>
+                    <button type="button" class="priorities-tab" data-timeframe="quarter">Quarter</button>
+                    <button type="button" class="priorities-tab" data-timeframe="custom">Custom</button>
+                </div>
+                <div class="toolbar" style="margin-top: 1rem;">
+                    <button type="button" class="btn btn-primary" id="priorities-new-set">New priority set</button>
+                </div>
+                <!-- Priority set create/edit panel (above KPIs and charts) -->
+                <div class="detail-panel hidden card" id="priority-set-panel" style="margin-top: 1rem; margin-bottom: 1rem;">
+                    <div class="detail-header">
+                        <h3 id="priority-set-panel-title">New priority set</h3>
+                        <button type="button" class="btn-close" id="priority-set-panel-close" aria-label="Close">×</button>
+                    </div>
+                    <form id="form-priority-set" class="form-capture form-detail">
+                        <input type="hidden" id="priority-set-id" />
+                        <div class="form-row">
+                            <label>Name <span class="req">*</span></label>
+                            <input type="text" id="priority-set-name" required placeholder="e.g. This week&#39;s top 5">
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <label>Timeframe</label>
+                                <select id="priority-set-timeframe">
+                                    <option value="week">Week</option>
+                                    <option value="month">Month</option>
+                                    <option value="quarter">Quarter</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label>Start date</label>
+                                <input type="date" id="priority-set-start-date">
+                            </div>
+                            <div class="form-row">
+                                <label>End date</label>
+                                <input type="date" id="priority-set-end-date">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>Product backlog item IDs (tag requirements)</label>
+                            <input type="text" id="priority-set-requirement-ids" placeholder="e.g. VR-001, VR-002, VR-003 (comma-separated)">
+                            <span class="hint">Use IDs from the Product backlog. Order here = priority order.</span>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <button type="button" class="btn btn-secondary" id="priority-set-panel-cancel">Cancel</button>
+                        </div>
+                    </form>
+                    <div id="priority-set-message" class="message hidden"></div>
+                </div>
+                <p class="hint" style="margin-bottom: 1rem;">Each tab shows priority sets for that timeframe. Create a set, then add product backlog item IDs (e.g. VR-001, VR-002) to tag them to this priority set.</p>
+                <div class="view-kpi-row" id="priorities-kpis">
+                    <div class="kpi-card"><span class="kpi-value" id="priorities-kpi-sets">—</span><span class="kpi-label">Priority sets</span></div>
+                    <div class="kpi-card"><span class="kpi-value" id="priorities-kpi-items">—</span><span class="kpi-label">Tagged items</span></div>
+                </div>
+                <div class="charts-row view-charts-row">
+                    <div class="chart-card"><h3>Items per set</h3><div class="chart-container"><canvas id="chart-priorities-bar"></canvas></div></div>
+                </div>
+                <div id="priorities-list" class="priority-sets-list"></div>
+            </section>
+
+            <!-- Releases (log + notes + comments) -->
+            <section class="view hidden" id="view-releases">
+                <div class="toolbar">
+                    <button type="button" class="btn btn-primary" id="releases-new">New release</button>
+                </div>
+                <!-- Release create/edit panel (above KPIs and charts) -->
+                <div class="detail-panel hidden card" id="release-panel" style="margin-top: 1rem; margin-bottom: 1rem;">
+                    <div class="detail-header">
+                        <h3 id="release-panel-title">New release</h3>
+                        <button type="button" class="btn-close" id="release-panel-close" aria-label="Close">×</button>
+                    </div>
+                    <form id="form-release" class="form-capture form-detail">
+                        <input type="hidden" id="release-id" />
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <label>Name <span class="req">*</span></label>
+                                <input type="text" id="release-name" required placeholder="e.g. Q1 2026 Release">
+                            </div>
+                            <div class="form-row">
+                                <label>Version</label>
+                                <input type="text" id="release-version" placeholder="e.g. 2.1.0">
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <label>Planned date</label>
+                                <input type="date" id="release-planned-date">
+                            </div>
+                            <div class="form-row">
+                                <label>Release date</label>
+                                <input type="date" id="release-release-date">
+                            </div>
+                            <div class="form-row">
+                                <label>Status</label>
+                                <select id="release-status">
+                                    <option value="planned">Planned</option>
+                                    <option value="in_progress">In progress</option>
+                                    <option value="released">Released</option>
+                                    <option value="cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>Release notes (Markdown)</label>
+                            <textarea id="release-notes" rows="6" placeholder="What shipped, highlights, breaking changes…"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <label>Internal comments / issues during release</label>
+                            <textarea id="release-internal-comments" rows="3" placeholder="Any issues, rollbacks, or internal notes…"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <label>Requirement IDs (comma-separated)</label>
+                            <input type="text" id="release-requirement-ids" placeholder="e.g. VR-001, VR-002">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save release</button>
+                            <button type="button" class="btn btn-secondary" id="release-panel-cancel">Cancel</button>
+                        </div>
+                    </form>
+                    <div id="release-message" class="message hidden"></div>
+                    <!-- Comments (shown when editing) -->
+                    <div id="release-comments-section" class="hidden" style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                        <h4 style="margin: 0 0 0.5rem;">Comments</h4>
+                        <ul id="release-comments-list"></ul>
+                        <div class="form-row" style="margin-top: 0.5rem;">
+                            <input type="text" id="release-new-comment" placeholder="Add a comment…">
+                            <button type="button" class="btn btn-secondary" id="release-add-comment" style="margin-top: 0.5rem;">Add comment</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="view-kpi-row" id="releases-kpis">
+                    <div class="kpi-card"><span class="kpi-value" id="releases-kpi-total">—</span><span class="kpi-label">Total releases</span></div>
+                    <div class="kpi-card"><span class="kpi-value" id="releases-kpi-planned">—</span><span class="kpi-label">Planned</span></div>
+                    <div class="kpi-card"><span class="kpi-value" id="releases-kpi-released">—</span><span class="kpi-label">Released</span></div>
+                </div>
+                <div class="charts-row view-charts-row">
+                    <div class="chart-card"><h3>By status</h3><div class="chart-container"><canvas id="chart-releases-pie"></canvas></div></div>
+                </div>
+                <div id="releases-list" class="releases-cards"></div>
+            </section>
+
+            <!-- Meetings (MOM: agenda, summary, decisions, action items) -->
+            <section class="view hidden" id="view-meetings">
+                <div class="toolbar">
+                    <select id="meetings-type">
+                        <option value="">All</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="fortnightly">Fortnightly</option>
+                    </select>
+                    <button type="button" class="btn btn-primary" id="meetings-new">New meeting</button>
+                </div>
+                <!-- Meeting create/edit panel (above KPIs and charts) -->
+                <div class="detail-panel hidden card" id="meeting-panel" style="margin-top: 1rem; margin-bottom: 1rem;">
+                    <div class="detail-header">
+                        <h3 id="meeting-panel-title">New meeting</h3>
+                        <button type="button" class="btn-close" id="meeting-panel-close" aria-label="Close">×</button>
+                    </div>
+                    <form id="form-meeting" class="form-capture form-detail">
+                        <input type="hidden" id="meeting-id" />
+                        <div class="form-grid">
+                            <div class="form-row">
+                                <label>Meeting type <span class="req">*</span></label>
+                                <select id="meeting-type" required>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="fortnightly">Fortnightly</option>
+                                </select>
+                            </div>
+                            <div class="form-row">
+                                <label>Meeting date <span class="req">*</span></label>
+                                <input type="date" id="meeting-date" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label>Attendees</label>
+                            <input type="text" id="meeting-attendees" placeholder="e.g. John, Jane, Team Lead">
+                        </div>
+                        <div class="form-row">
+                            <label>Agenda</label>
+                            <textarea id="meeting-agenda" rows="3" placeholder="What will be discussed…"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <label>Summary / What was discussed (MOM)</label>
+                            <textarea id="meeting-summary" rows="4" placeholder="Key points, outcomes, what was discussed…"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <label>Decisions</label>
+                            <textarea id="meeting-decisions" rows="3" placeholder="One decision per line"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <label>Action items</label>
+                            <textarea id="meeting-action-items" rows="4" placeholder="One per line: Action text | Owner | Due date (YYYY-MM-DD) | open or done"></textarea>
+                            <span class="hint">Example: Follow up with QA | John | 2026-02-25 | open</span>
+                        </div>
+                        <div class="form-row">
+                            <label>Link requirement IDs (comma-separated)</label>
+                            <input type="text" id="meeting-requirement-ids" placeholder="e.g. VR-001, VR-002">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save meeting</button>
+                            <button type="button" class="btn btn-secondary" id="meeting-panel-cancel">Cancel</button>
+                        </div>
+                    </form>
+                    <div id="meeting-message" class="message hidden"></div>
+                </div>
+                <p class="hint" style="margin-bottom: 1rem;">Create a meeting to capture name (type + date), agenda, summary (what was discussed), decisions, and action items — your Minutes of Meeting (MOM).</p>
+                <div class="view-kpi-row" id="meetings-kpis">
+                    <div class="kpi-card"><span class="kpi-value" id="meetings-kpi-total">—</span><span class="kpi-label">Total meetings</span></div>
+                    <div class="kpi-card"><span class="kpi-value" id="meetings-kpi-weekly">—</span><span class="kpi-label">Weekly</span></div>
+                    <div class="kpi-card"><span class="kpi-value" id="meetings-kpi-fortnightly">—</span><span class="kpi-label">Fortnightly</span></div>
+                </div>
+                <div class="charts-row view-charts-row">
+                    <div class="chart-card"><h3>By type</h3><div class="chart-container"><canvas id="chart-meetings-pie"></canvas></div></div>
+                    <div class="chart-card"><h3>Meetings over time</h3><div class="chart-container"><canvas id="chart-meetings-line"></canvas></div></div>
+                </div>
+                <div id="meetings-list" class="meetings-list"></div>
             </section>
 
             <!-- Manage users (Admin only) -->
@@ -373,8 +686,9 @@
                 </div>
             </section>
 
-            <!-- Shared detail panel (used by Product backlog and Q1 Backlog) -->
-            <div class="detail-panel hidden" id="detail-panel">
+                </div>
+            <!-- Edit requirement: half page on the right (Product backlog & Q1: click pencil to edit) -->
+            <div class="detail-panel detail-panel-half hidden" id="detail-panel">
                     <div class="detail-header">
                         <h3 id="detail-title">Edit requirement</h3>
                         <button type="button" class="btn-close" id="detail-close" aria-label="Close">×</button>
@@ -489,6 +803,7 @@
                     </form>
                     <div id="detail-message" class="message hidden"></div>
                 </div>
+            </div>
         </main>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>

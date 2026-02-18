@@ -61,6 +61,9 @@ public class Requirement {
     @CsvBindByName(column = "Comments")
     private String comments;
 
+    /** Release month YYYY-MM for roadmap (optional; not in CSV). */
+    private String releaseMonth;
+
     public Requirement() {
     }
 
@@ -102,4 +105,6 @@ public class Requirement {
     public void setAssignee(String assignee) { this.assignee = assignee; }
     public String getComments() { return comments; }
     public void setComments(String comments) { this.comments = comments; }
+    public String getReleaseMonth() { return releaseMonth; }
+    public void setReleaseMonth(String releaseMonth) { this.releaseMonth = releaseMonth; }
 }

@@ -5,20 +5,21 @@ import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
-import com.varminer.dashboard.model.Requirement;
+import com.varminer.dashboard.entity.RequirementEntity;
+import com.varminer.dashboard.mapper.RequirementMapper;
 import com.varminer.dashboard.model.KpiSummary;
-import org.springframework.beans.factory.annotation.Value;
+import com.varminer.dashboard.model.Requirement;
+import com.varminer.dashboard.repository.RequirementRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.annotation.PostConstruct;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.util.stream.Collectors;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,80 +42,32 @@ public class RequirementsService {
             Map.entry("Done", "Released")
     );
 
-    @Value("${varminer.requirements.csv-path:}")
-    private String csvPathConfig;
+    private final RequirementRepository requirementRepository;
+    private final RequirementMapper mapper;
 
-    private Path csvPath;
-    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
-
-    @PostConstruct
-    public void init() {
-        if (csvPathConfig != null && !csvPathConfig.isBlank()) {
-            csvPath = Paths.get(csvPathConfig);
-        } else {
-            Path cwd = Paths.get(System.getProperty("user.dir"));
-            Path inCwd = cwd.resolve("requirements.csv");
-            Path inParent = cwd.getParent() != null ? cwd.getParent().resolve("requirements.csv") : inCwd;
-            csvPath = Files.exists(inCwd) ? inCwd : inParent;
-        }
+    public RequirementsService(RequirementRepository requirementRepository, RequirementMapper mapper) {
+        this.requirementRepository = requirementRepository;
+        this.mapper = mapper;
     }
 
     private String normalizeStatus(String status) {
         if (status == null || status.isBlank()) return "Not Started";
-        String s = status.strip();
-        return STATUS_ALIASES.getOrDefault(s, s);
+        return STATUS_ALIASES.getOrDefault(status.strip(), status.strip());
     }
 
-    private List<Requirement> readAll() throws IOException {
-        lock.readLock().lock();
-        try {
-            if (!Files.exists(csvPath)) {
-                return new ArrayList<>();
-            }
-            try (Reader r = Files.newBufferedReader(csvPath)) {
-                List<Requirement> list = new CsvToBeanBuilder<Requirement>(r)
-                        .withType(Requirement.class)
-                        .withIgnoreLeadingWhiteSpace(true)
-                        .build()
-                        .parse();
-                list.forEach(req -> req.setStatus(normalizeStatus(req.getStatus())));
-                return list;
-            }
-        } finally {
-            lock.readLock().unlock();
-        }
-    }
-
-    private void writeAll(List<Requirement> requirements) throws IOException {
-        lock.writeLock().lock();
-        try {
-            Files.createDirectories(csvPath.getParent());
-            try (Writer w = Files.newBufferedWriter(csvPath)) {
-                StatefulBeanToCsv<Requirement> writer = new StatefulBeanToCsvBuilder<Requirement>(w)
-                        .withApplyQuotesToAll(false)
-                        .build();
-                try {
-                    writer.write(requirements);
-                } catch (CsvDataTypeMismatchException | CsvRequiredFieldEmptyException e) {
-                    throw new RuntimeException("Failed to write CSV", e);
-                }
-            }
-        } finally {
-            lock.writeLock().unlock();
-        }
-    }
-
+    @Transactional(readOnly = true)
     public List<Requirement> getAll() {
-        try {
-            return readAll();
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to read requirements", e);
-        }
+        return requirementRepository.findAllByOrderByIdAsc().stream()
+                .map(mapper::toDto)
+                .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<Requirement> getByQ1Release() {
-        return getAll().stream()
-                .filter(r -> (r.getRelease() != null && r.getRelease().toLowerCase().contains("q1")))
+        List<RequirementEntity> all = requirementRepository.findAllByOrderByIdAsc();
+        return all.stream()
+                .filter(r -> r.getReleaseText() != null && r.getReleaseText().toLowerCase().contains("q1"))
+                .map(mapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -130,11 +83,14 @@ public class RequirementsService {
         }
     }
 
+    @Transactional(readOnly = true)
     public KpiSummary getKpiSummary() {
-        List<Requirement> all = getAll();
-        int total = all.size();
-        Map<String, Long> countByStatus = all.stream()
-                .collect(Collectors.groupingBy(r -> r.getStatus() == null ? "Not Started" : r.getStatus(), Collectors.counting()));
+        List<Object[]> counts = requirementRepository.countByStatus();
+        Map<String, Long> countByStatus = new HashMap<>();
+        for (Object[] row : counts) {
+            countByStatus.put((String) row[0], (Long) row[1]);
+        }
+        int total = countByStatus.values().stream().mapToInt(Long::intValue).sum();
         Map<String, Integer> byStatus = new LinkedHashMap<>();
         for (String s : STATUS_ORDER) {
             byStatus.put(s, countByStatus.getOrDefault(s, 0L).intValue());
@@ -142,30 +98,24 @@ public class RequirementsService {
         return new KpiSummary(total, byStatus);
     }
 
+    @Transactional
     public Requirement add(Requirement req) {
-        if (req.getStatus() == null || req.getStatus().isBlank()) {
-            req.setStatus("Not Started");
-        } else {
-            req.setStatus(normalizeStatus(req.getStatus()));
-        }
-        if (req.getId() == null || req.getId().isBlank()) {
-            req.setId(generateNextId());
-        }
-        List<Requirement> all = getAll();
-        all.add(req);
-        try {
-            writeAll(all);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to save requirement", e);
-        }
-        return req;
+        String status = (req.getStatus() == null || req.getStatus().isBlank()) ? "Not Started" : normalizeStatus(req.getStatus());
+        req.setStatus(status);
+        String externalId = (req.getId() != null && !req.getId().isBlank()) ? req.getId().trim() : generateNextId();
+        req.setId(externalId);
+        RequirementEntity e = mapper.toEntity(req);
+        e.setExternalId(externalId);
+        e.setStatus(status);
+        e = requirementRepository.save(e);
+        return mapper.toDto(e);
     }
 
     private String generateNextId() {
-        List<Requirement> all = getAll();
+        List<RequirementEntity> all = requirementRepository.findAllByOrderByIdAsc();
         int max = 0;
-        for (Requirement r : all) {
-            String id = r.getId();
+        for (RequirementEntity r : all) {
+            String id = r.getExternalId();
             if (id != null && id.startsWith("VR-")) {
                 try {
                     int n = Integer.parseInt(id.substring(3).trim());
@@ -176,70 +126,79 @@ public class RequirementsService {
         return "VR-" + String.format("%03d", max + 1);
     }
 
+    @Transactional
     public Optional<Requirement> update(String id, Requirement update) {
-        List<Requirement> all = getAll();
-        for (int i = 0; i < all.size(); i++) {
-            if (id.equals(all.get(i).getId())) {
-                Requirement existing = all.get(i);
-                if (update.getStatus() != null) existing.setStatus(normalizeStatus(update.getStatus()));
-                if (update.getRequirement() != null) existing.setRequirement(update.getRequirement());
-                if (update.getDescription() != null) existing.setDescription(update.getDescription());
-                if (update.getAcceptanceCriteria() != null) existing.setAcceptanceCriteria(update.getAcceptanceCriteria());
-                if (update.getClear() != null) existing.setClear(update.getClear());
-                if (update.getEstimate() != null) existing.setEstimate(update.getEstimate());
-                if (update.getDependency() != null) existing.setDependency(update.getDependency());
-                if (update.getPriority() != null) existing.setPriority(update.getPriority());
-                if (update.getStackRank() != null) existing.setStackRank(update.getStackRank());
-                if (update.getStartSprint() != null) existing.setStartSprint(update.getStartSprint());
-                if (update.getTargetSprint() != null) existing.setTargetSprint(update.getTargetSprint());
-                if (update.getRelease() != null) existing.setRelease(update.getRelease());
-                if (update.getRequesteeDept() != null) existing.setRequesteeDept(update.getRequesteeDept());
-                if (update.getRequestedBy() != null) existing.setRequestedBy(update.getRequestedBy());
-                if (update.getAssignee() != null) existing.setAssignee(update.getAssignee());
-                if (update.getComments() != null) existing.setComments(update.getComments());
-                try {
-                    writeAll(all);
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed to update requirement", e);
-                }
-                return Optional.of(existing);
-            }
-        }
-        return Optional.empty();
+        return requirementRepository.findByExternalId(id)
+                .map(existing -> {
+                    if (update.getStatus() != null) existing.setStatus(normalizeStatus(update.getStatus()));
+                    mapper.updateEntityFromDto(update, existing);
+                    existing = requirementRepository.save(existing);
+                    return mapper.toDto(existing);
+                });
     }
 
-    /**
-     * Delete a requirement by ID. Returns true if found and removed.
-     */
+    @Transactional
     public boolean delete(String id) {
-        List<Requirement> all = getAll();
-        boolean removed = all.removeIf(r -> id.equals(r.getId()));
-        if (removed) {
-            try {
-                writeAll(all);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to delete requirement", e);
-            }
-        }
-        return removed;
+        return requirementRepository.findByExternalId(id)
+                .map(e -> {
+                    requirementRepository.delete(e);
+                    return true;
+                })
+                .orElse(false);
     }
 
     /**
      * Replace all requirements with rows parsed from the given CSV input.
-     * Uses same column mapping as our CSV (ID, Category, Type, Requirement, etc.).
-     * Normalizes status (e.g. "In Progress" -> "In DEV").
-     * @return number of requirements imported
+     * Admin-only; use when VARMINER_IMPORT_ENABLED=true.
      */
+    @Transactional
     public int importFromCsv(InputStream csvInput) throws IOException {
-        try (Reader r = new InputStreamReader(csvInput, StandardCharsets.UTF_8)) {
+        try (InputStreamReader r = new InputStreamReader(csvInput, StandardCharsets.UTF_8)) {
             List<Requirement> list = new CsvToBeanBuilder<Requirement>(r)
                     .withType(Requirement.class)
                     .withIgnoreLeadingWhiteSpace(true)
                     .build()
                     .parse();
             list.forEach(req -> req.setStatus(normalizeStatus(req.getStatus())));
-            writeAll(list);
+            requirementRepository.deleteAll();
+            for (Requirement dto : list) {
+                String extId = (dto.getId() != null && !dto.getId().isBlank()) ? dto.getId().trim() : generateNextId();
+                dto.setId(extId);
+                RequirementEntity e = mapper.toEntity(dto);
+                e.setExternalId(extId);
+                e.setStatus(dto.getStatus());
+                requirementRepository.save(e);
+            }
             return list.size();
         }
+    }
+
+    /** Roadmap: requirements grouped by release_month for the given quarter (e.g. Q1 2026 -> 2026-01, 2026-02, 2026-03). */
+    @Transactional(readOnly = true)
+    public Map<String, List<Requirement>> getRoadmapByMonth(String quarter, int year) {
+        int startMonth = 1, endMonth = 3;
+        if ("Q2".equalsIgnoreCase(quarter)) { startMonth = 4; endMonth = 6; }
+        else if ("Q3".equalsIgnoreCase(quarter)) { startMonth = 7; endMonth = 9; }
+        else if ("Q4".equalsIgnoreCase(quarter)) { startMonth = 10; endMonth = 12; }
+        Map<String, List<Requirement>> byMonth = new LinkedHashMap<>();
+        for (int m = startMonth; m <= endMonth; m++) {
+            byMonth.put(String.format("%d-%02d", year, m), new ArrayList<>());
+        }
+        List<RequirementEntity> all = requirementRepository.findAllByOrderByIdAsc();
+        for (RequirementEntity e : all) {
+            String month = e.getReleaseMonth();
+            if (month != null && month.matches("\\d{4}-\\d{2}")) {
+                String[] parts = month.split("-");
+                int y = Integer.parseInt(parts[0]);
+                int mo = Integer.parseInt(parts[1]);
+                if (y == year && mo >= startMonth && mo <= endMonth) {
+                    byMonth.get(month).add(mapper.toDto(e));
+                }
+            } else if (e.getReleaseText() != null && e.getReleaseText().toLowerCase().contains(quarter.toLowerCase())) {
+                String firstMonth = String.format("%d-%02d", year, startMonth);
+                byMonth.get(firstMonth).add(mapper.toDto(e));
+            }
+        }
+        return byMonth;
     }
 }
