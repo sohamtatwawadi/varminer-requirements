@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f5f6f8">
+    <meta name="color-scheme" content="light">
     <title>VarMiner · Product Backlog</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,7 +13,8 @@
 </head>
 <body>
     <div class="app">
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
+            <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Collapse sidebar" title="Collapse sidebar"></button>
             <div class="sidebar-brand">
                 <span class="brand-icon">◈</span>
                 <span class="brand-text">VarMiner</span>
@@ -34,7 +37,7 @@
                     <span>2026</span>
                 </a>
                 <a href="#" class="nav-item" data-view="roadmap" title="Roadmap by month">
-                    <span class="nav-icon">🗓</span>
+                    <span class="nav-icon">🛣</span>
                     <span>Roadmap</span>
                 </a>
                 <a href="#" class="nav-item" data-view="upcoming-releases">
@@ -687,8 +690,9 @@
             </section>
 
                 </div>
-            <!-- Edit requirement: half page on the right (Product backlog & Q1: click pencil to edit) -->
-            <div class="detail-panel detail-panel-half hidden" id="detail-panel">
+            <!-- Edit requirement: modal popup (Product backlog & Q1: click row or pencil) -->
+            <div class="detail-modal-overlay hidden" id="detail-panel-overlay" aria-hidden="true"></div>
+            <div class="detail-panel detail-panel-modal hidden" id="detail-panel">
                     <div class="detail-header">
                         <h3 id="detail-title">Edit requirement</h3>
                         <button type="button" class="btn-close" id="detail-close" aria-label="Close">×</button>

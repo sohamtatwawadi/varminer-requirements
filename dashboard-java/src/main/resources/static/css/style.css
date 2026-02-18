@@ -50,6 +50,66 @@ body {
     display: flex;
     flex-direction: column;
     box-shadow: var(--shadow);
+    transition: width 0.2s ease, min-width 0.2s ease;
+    position: relative;
+}
+
+.sidebar-toggle {
+    position: absolute;
+    top: 1rem;
+    right: -12px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    box-shadow: var(--shadow);
+    transition: background 0.15s, color 0.15s;
+}
+.sidebar-toggle:hover {
+    background: var(--bg-input);
+    color: var(--text);
+}
+
+.sidebar.sidebar-collapsed {
+    width: 64px;
+    min-width: 64px;
+}
+.sidebar.sidebar-collapsed .sidebar-toggle {
+    right: -12px;
+}
+.sidebar-toggle::before {
+    content: '◀';
+}
+.sidebar.sidebar-collapsed .sidebar-toggle::before {
+    content: '▶';
+}
+.sidebar.sidebar-collapsed .brand-text,
+.sidebar.sidebar-collapsed .nav-item span:not(.nav-icon),
+.sidebar.sidebar-collapsed .footer-label,
+.sidebar.sidebar-collapsed .footer-meta {
+    display: none;
+}
+.sidebar.sidebar-collapsed .sidebar-brand {
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+.sidebar.sidebar-collapsed .nav-item {
+    justify-content: center;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+}
+.sidebar.sidebar-collapsed .sidebar-footer {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
 }
 
 .sidebar-brand {
@@ -603,33 +663,39 @@ body {
     box-shadow: var(--shadow-card);
 }
 
-/* Half-page edit form on the right (Product backlog & Q1 tab) */
-.detail-panel-half {
-    margin: 0;
-    width: 50%;
-    min-width: 320px;
-    max-width: 520px;
-    flex-shrink: 0;
-    border-radius: 0;
-    border-left: 1px solid var(--border);
-    box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
-    overflow-y: auto;
-    transition: width 0.25s ease, min-width 0.25s ease;
+/* Modal overlay for requirement edit popup */
+.detail-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 100;
+    cursor: pointer;
 }
-.detail-panel-half.hidden {
-    width: 0;
-    min-width: 0;
-    overflow: hidden;
-    padding: 0;
-    border-left: none;
-    box-shadow: none;
+.detail-modal-overlay.hidden {
+    display: none;
+}
+
+/* Edit requirement: large horizontal modal popup (Product backlog & Q1) */
+.detail-panel-modal {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 90vw;
+    max-width: 960px;
+    max-height: 90vh;
+    margin: 0;
+    overflow-y: auto;
+    z-index: 101;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius);
 }
 
 .detail-panel.hidden {
     display: none;
 }
-.detail-panel-half.hidden {
-    display: block; /* keep in layout so width transition works; width: 0 hides it */
+.detail-panel-modal.hidden {
+    display: none;
 }
 
 .detail-header {
@@ -686,6 +752,11 @@ body {
 .btn-edit svg {
     width: 1rem;
     height: 1rem;
+}
+
+#backlog-tbody tr[data-id],
+#q1-tbody tr[data-id] {
+    cursor: pointer;
 }
 .sr-only {
     position: absolute;

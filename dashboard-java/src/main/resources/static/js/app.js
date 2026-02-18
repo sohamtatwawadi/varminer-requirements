@@ -587,10 +587,14 @@ function showDetail(req) {
     document.getElementById('detail-title').textContent = (req.id || '') + ' — Edit';
     hideMessage('detail-message');
     document.getElementById('detail-panel').classList.remove('hidden');
+    const overlay = document.getElementById('detail-panel-overlay');
+    if (overlay) { overlay.classList.remove('hidden'); overlay.setAttribute('aria-hidden', 'false'); }
 }
 
 function closeDetail() {
     document.getElementById('detail-panel').classList.add('hidden');
+    const overlay = document.getElementById('detail-panel-overlay');
+    if (overlay) { overlay.classList.add('hidden'); overlay.setAttribute('aria-hidden', 'true'); }
 }
 
 function populateReleaseFilter() {
@@ -625,6 +629,21 @@ document.querySelectorAll('.nav-item').forEach(el => {
         setView(el.getAttribute('data-view'));
     });
 });
+
+(function initSidebarCollapse() {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.getElementById('sidebar-toggle');
+    const key = 'varminer-sidebar-collapsed';
+    if (sidebar && toggle) {
+        if (localStorage.getItem(key) === '1') sidebar.classList.add('sidebar-collapsed');
+        toggle.addEventListener('click', () => {
+            sidebar.classList.toggle('sidebar-collapsed');
+            localStorage.setItem(key, sidebar.classList.contains('sidebar-collapsed') ? '1' : '0');
+            toggle.setAttribute('aria-label', sidebar.classList.contains('sidebar-collapsed') ? 'Expand sidebar' : 'Collapse sidebar');
+            toggle.setAttribute('title', sidebar.classList.contains('sidebar-collapsed') ? 'Expand sidebar' : 'Collapse sidebar');
+        });
+    }
+})();
 
 const formCapture = document.getElementById('form-capture');
 if (formCapture) formCapture.addEventListener('submit', async e => {
@@ -694,13 +713,26 @@ const detailClose = document.getElementById('detail-close');
 const detailCancel = document.getElementById('detail-cancel');
 if (detailClose) detailClose.addEventListener('click', closeDetail);
 if (detailCancel) detailCancel.addEventListener('click', closeDetail);
+const detailOverlay = document.getElementById('detail-panel-overlay');
+if (detailOverlay) detailOverlay.addEventListener('click', closeDetail);
 document.addEventListener('click', e => {
     const btn = e.target.closest('.btn-edit');
-    if (!btn) return;
-    const id = btn.getAttribute('data-id');
-    if (!id) return;
-    const req = allRequirements.find(r => r.id === id);
-    if (req) showDetail(req);
+    if (btn) {
+        const id = btn.getAttribute('data-id');
+        if (id) {
+            const req = allRequirements.find(r => r.id === id);
+            if (req) showDetail(req);
+        }
+        return;
+    }
+    const row = e.target.closest('#backlog-tbody tr, #q1-tbody tr');
+    if (row) {
+        const id = row.getAttribute('data-id');
+        if (id) {
+            const req = allRequirements.find(r => r.id === id);
+            if (req) showDetail(req);
+        }
+    }
 });
 
 const detailDelete = document.getElementById('detail-delete');
