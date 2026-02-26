@@ -1351,21 +1351,41 @@ function populateMeetingForm(m) {
     document.getElementById('meeting-requirement-ids').value = (m.requirementIds || []).join(', ');
 }
 
+function formatMeetingDate(dateStr) {
+    if (!dateStr || !dateStr.trim()) return '';
+    const d = new Date(dateStr + 'T12:00:00');
+    if (isNaN(d.getTime())) return dateStr;
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+}
+
 function showMeetingViewMode(m) {
     const viewMode = document.getElementById('meeting-view-mode');
     const formEl = document.getElementById('form-meeting');
     if (!viewMode || !formEl) return;
-    document.getElementById('meeting-view-type').textContent = m.meetingType || '—';
-    document.getElementById('meeting-view-date').textContent = m.meetingDate || '—';
-    document.getElementById('meeting-view-attendees').textContent = m.attendees || '—';
-    document.getElementById('meeting-view-agenda').textContent = m.agenda || '—';
-    document.getElementById('meeting-view-summary').textContent = m.summary || '—';
-    document.getElementById('meeting-view-decisions').textContent = (m.decisions || []).join('\n') || '—';
+    const typeLabel = (m.meetingType || '').replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) || '—';
+    document.getElementById('meeting-view-type').textContent = typeLabel;
+    document.getElementById('meeting-view-date').textContent = formatMeetingDate(m.meetingDate);
+    document.getElementById('meeting-view-attendees').textContent = (m.attendees || '').trim() || '—';
+    document.getElementById('meeting-view-agenda').textContent = (m.agenda || '').trim() || '—';
+    document.getElementById('meeting-view-summary').textContent = (m.summary || '').trim() || '—';
+    document.getElementById('meeting-view-decisions').textContent = (m.decisions || []).join('\n').trim() || '—';
     const actionStr = (m.actionItems || []).map(a =>
         [a.actionText, a.owner || '', a.dueDate || '', a.status || 'open'].join(' | ')
     ).join('\n');
-    document.getElementById('meeting-view-action-items').textContent = actionStr || '—';
-    document.getElementById('meeting-view-requirement-ids').textContent = (m.requirementIds || []).join(', ') || '—';
+    document.getElementById('meeting-view-action-items').textContent = actionStr.trim() || '—';
+    document.getElementById('meeting-view-requirement-ids').textContent = (m.requirementIds || []).join(', ').trim() || '—';
+    document.getElementById('meeting-view-field-type').classList.remove('hidden');
+    document.getElementById('meeting-view-field-date').classList.remove('hidden');
+    const attendeesVal = (m.attendees || '').trim();
+    document.getElementById('meeting-view-field-attendees').classList.toggle('hidden', !attendeesVal);
+    ['meeting-view-section-agenda', 'meeting-view-section-summary', 'meeting-view-section-decisions', 'meeting-view-section-actions', 'meeting-view-section-linked'].forEach(sectionId => {
+        const section = document.getElementById(sectionId);
+        if (!section) return;
+        const p = section.querySelector('.meeting-view-paragraph');
+        const val = (p && p.textContent || '').trim();
+        section.classList.toggle('hidden', !val || val === '—');
+    });
     const btnDelete = document.getElementById('meeting-delete-btn');
     if (btnDelete) {
         btnDelete.dataset.meetingId = m.id || '';
@@ -1380,11 +1400,7 @@ function showMeetingEditMode() {
     const formEl = document.getElementById('form-meeting');
     if (viewMode) viewMode.classList.add('hidden');
     if (formEl) formEl.classList.remove('hidden');
-    const btnFormDelete = document.getElementById('meeting-form-delete');
-    if (btnFormDelete && currentMeetingData?.id) {
-        btnFormDelete.dataset.meetingId = currentMeetingData.id;
-        btnFormDelete.classList.toggle('hidden', !(currentUser && currentUser.role === 'ADMIN'));
-    } else if (btnFormDelete) btnFormDelete.classList.add('hidden');
+    document.getElementById('meeting-panel-title').textContent = 'Edit meeting';
 }
 
 function openMeetingPanel(id) {
@@ -1498,14 +1514,20 @@ async function renderMeetingsList() {
     const btnViewEdit = document.getElementById('meeting-view-edit');
     const btnViewClose = document.getElementById('meeting-view-close');
     const btnDelete = document.getElementById('meeting-delete-btn');
-    const btnFormDelete = document.getElementById('meeting-form-delete');
+    const btnSave = document.getElementById('meeting-save-btn');
     if (btnNew) btnNew.addEventListener('click', () => openMeetingPanel(null));
     if (btnClose) btnClose.addEventListener('click', closeMeetingPanel);
-    if (btnCancel) btnCancel.addEventListener('click', closeMeetingPanel);
-    if (btnViewEdit) btnViewEdit.addEventListener('click', () => { showMeetingEditMode(); document.getElementById('meeting-panel-title').textContent = 'Edit meeting (MOM)'; });
+    if (btnCancel) btnCancel.addEventListener('click', () => {
+        if (currentMeetingData && currentMeetingData.id) {
+            showMeetingViewMode(currentMeetingData);
+            document.getElementById('meeting-panel-title').textContent = 'Meeting details';
+        } else {
+            closeMeetingPanel();
+        }
+    });
+    if (btnViewEdit) btnViewEdit.addEventListener('click', () => showMeetingEditMode());
     if (btnViewClose) btnViewClose.addEventListener('click', closeMeetingPanel);
     if (btnDelete) btnDelete.addEventListener('click', () => { const id = btnDelete.dataset.meetingId; if (id) deleteMeeting(Number(id)); });
-    if (btnFormDelete) btnFormDelete.addEventListener('click', () => { const id = btnFormDelete.dataset.meetingId; if (id) deleteMeeting(Number(id)); });
     if (form) form.addEventListener('submit', async e => {
         e.preventDefault();
         const id = document.getElementById('meeting-id').value;
@@ -1527,16 +1549,30 @@ async function renderMeetingsList() {
             releaseIds: []
         };
         hideMessage('meeting-message');
+        const saveBtn = btnSave || form.querySelector('button[type="submit"]');
+        const origLabel = saveBtn ? saveBtn.textContent : 'Save';
+        if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
         try {
             const url = id ? API + '/meetings/' + id : API + '/meetings';
             const method = id ? 'PUT' : 'POST';
             const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(body) });
             if (!res.ok) throw new Error(await res.text() || 'Save failed');
+            const updated = await res.json().catch(() => ({}));
             showMessage('meeting-message', 'Saved.', 'success');
-            if (!id) closeMeetingPanel();
-            else renderMeetingsList();
+            if (!id) {
+                closeMeetingPanel();
+                renderMeetingsList();
+            } else {
+                currentMeetingData = updated;
+                populateMeetingForm(updated);
+                showMeetingViewMode(updated);
+                document.getElementById('meeting-panel-title').textContent = 'Meeting details';
+                renderMeetingsList();
+            }
         } catch (err) {
             showMessage('meeting-message', err.message || 'Failed to save.', 'error');
+        } finally {
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = origLabel; }
         }
     });
 })();

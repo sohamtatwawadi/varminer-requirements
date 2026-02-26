@@ -617,17 +617,45 @@
                         <h3 id="meeting-panel-title">New meeting</h3>
                         <button type="button" class="btn-close" id="meeting-panel-close" aria-label="Close">×</button>
                     </div>
-                    <!-- View mode: read-only meeting details (shown when opening existing meeting) -->
-                    <div id="meeting-view-mode" class="hidden" style="padding: 0 1rem 1rem;">
-                        <div class="form-row"><strong>Type</strong><span id="meeting-view-type"></span></div>
-                        <div class="form-row"><strong>Date</strong><span id="meeting-view-date"></span></div>
-                        <div class="form-row"><strong>Attendees</strong><span id="meeting-view-attendees" class="text-muted"></span></div>
-                        <div class="form-row"><strong>Agenda</strong><pre id="meeting-view-agenda" class="view-pre"></pre></div>
-                        <div class="form-row"><strong>Summary (MOM)</strong><pre id="meeting-view-summary" class="view-pre"></pre></div>
-                        <div class="form-row"><strong>Decisions</strong><pre id="meeting-view-decisions" class="view-pre"></pre></div>
-                        <div class="form-row"><strong>Action items</strong><pre id="meeting-view-action-items" class="view-pre"></pre></div>
-                        <div class="form-row"><strong>Linked requirements</strong><span id="meeting-view-requirement-ids" class="text-muted"></span></div>
-                        <div class="form-actions" style="margin-top: 1rem;">
+                    <!-- VIEW MODE: read-only summary card (no form inputs) -->
+                    <div id="meeting-view-mode" class="meeting-view-card hidden">
+                        <h3 class="meeting-view-title">Meeting Details</h3>
+                        <hr class="meeting-view-sep">
+                        <div class="meeting-view-meta">
+                            <div class="meeting-view-field" id="meeting-view-field-type">
+                                <span class="meeting-view-label">Type</span>
+                                <span class="meeting-view-value" id="meeting-view-type"></span>
+                            </div>
+                            <div class="meeting-view-field" id="meeting-view-field-date">
+                                <span class="meeting-view-label">Date</span>
+                                <span class="meeting-view-value" id="meeting-view-date"></span>
+                            </div>
+                            <div class="meeting-view-field meeting-view-field-optional" id="meeting-view-field-attendees">
+                                <span class="meeting-view-label">Attendees</span>
+                                <span class="meeting-view-value" id="meeting-view-attendees"></span>
+                            </div>
+                        </div>
+                        <div class="meeting-view-section" id="meeting-view-section-agenda">
+                            <h4 class="meeting-view-section-title">Agenda</h4>
+                            <p class="meeting-view-paragraph" id="meeting-view-agenda"></p>
+                        </div>
+                        <div class="meeting-view-section" id="meeting-view-section-summary">
+                            <h4 class="meeting-view-section-title">Summary (MOM)</h4>
+                            <p class="meeting-view-paragraph" id="meeting-view-summary"></p>
+                        </div>
+                        <div class="meeting-view-section" id="meeting-view-section-decisions">
+                            <h4 class="meeting-view-section-title">Decisions</h4>
+                            <p class="meeting-view-paragraph" id="meeting-view-decisions"></p>
+                        </div>
+                        <div class="meeting-view-section" id="meeting-view-section-actions">
+                            <h4 class="meeting-view-section-title">Action Items</h4>
+                            <p class="meeting-view-paragraph" id="meeting-view-action-items"></p>
+                        </div>
+                        <div class="meeting-view-section meeting-view-field-optional" id="meeting-view-section-linked">
+                            <h4 class="meeting-view-section-title">Linked Requirements</h4>
+                            <p class="meeting-view-paragraph" id="meeting-view-requirement-ids"></p>
+                        </div>
+                        <div class="meeting-view-actions">
                             <button type="button" class="btn btn-primary" id="meeting-view-edit">Edit</button>
                             <button type="button" class="btn btn-danger hidden" id="meeting-delete-btn" data-meeting-id="">Delete meeting</button>
                             <button type="button" class="btn btn-secondary" id="meeting-view-close">Close</button>
@@ -676,9 +704,8 @@
                             <label>Link requirement IDs (comma-separated)</label>
                             <input type="text" id="meeting-requirement-ids" placeholder="e.g. VR-001, VR-002">
                         </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">Save meeting</button>
-                            <button type="button" class="btn btn-danger hidden" id="meeting-form-delete" data-meeting-id="">Delete meeting</button>
+                        <div class="form-actions meeting-edit-actions">
+                            <button type="submit" class="btn btn-primary" id="meeting-save-btn">Save</button>
                             <button type="button" class="btn btn-secondary" id="meeting-panel-cancel">Cancel</button>
                         </div>
                     </form>

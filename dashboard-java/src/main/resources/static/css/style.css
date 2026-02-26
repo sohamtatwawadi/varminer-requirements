@@ -954,6 +954,71 @@ body {
 .view-pre { white-space: pre-wrap; margin: 0; font-family: inherit; font-size: 0.9rem; }
 .text-muted { color: var(--text-muted, #6b7280); }
 
+/* Meeting Details — VIEW MODE card */
+.meeting-view-card {
+    padding: 1.25rem 1.5rem;
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.meeting-view-card.hidden { display: none !important; }
+.meeting-view-title {
+    margin: 0 0 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text, #1e293b);
+}
+.meeting-view-sep {
+    border: none;
+    border-top: 1px solid var(--border, #e2e8f0);
+    margin: 0 0 1rem;
+}
+.meeting-view-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem 2rem;
+    margin-bottom: 1.25rem;
+}
+.meeting-view-field { display: flex; flex-direction: column; gap: 0.2rem; }
+.meeting-view-field.hidden { display: none !important; }
+.meeting-view-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text-muted, #64748b);
+}
+.meeting-view-value { font-size: 0.95rem; color: var(--text, #1e293b); }
+.meeting-view-section {
+    margin-bottom: 1.25rem;
+}
+.meeting-view-section.hidden { display: none !important; }
+.meeting-view-section-title {
+    margin: 0 0 0.4rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text-muted, #64748b);
+}
+.meeting-view-paragraph {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text, #1e293b);
+    white-space: pre-wrap;
+}
+.meeting-view-actions {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border, #e2e8f0);
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+#form-meeting.hidden { display: none !important; }
+
 @media (max-width: 600px) {
     .sidebar {
         width: 72px;
