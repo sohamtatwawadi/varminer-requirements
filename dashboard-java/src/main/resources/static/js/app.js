@@ -43,7 +43,7 @@ function setView(name) {
     if (name === 'roadmap') { renderRoadmap(); refreshViewCharts('roadmap'); }
     if (name === 'upcoming-releases') { renderUpcomingReleases(); refreshViewCharts('upcoming-releases'); }
     if (name === 'priorities') { renderPriorities(); refreshViewCharts('priorities'); }
-    if (name === 'releases') { renderReleasesList(); refreshViewCharts('releases'); }
+    if (name === 'releases') { currentReleasesStatusFilter = ''; renderReleasesList(); refreshViewCharts('releases'); }
     if (name === 'meetings') { renderMeetingsList(); refreshViewCharts('meetings'); }
     if (name === 'users') renderUsers();
 }
@@ -828,6 +828,44 @@ if (kpiGrid) {
     });
 }
 
+document.addEventListener('click', function(e) {
+    const card = e.target.closest('.view-kpi-row .kpi-card.kpi-clickable');
+    if (!card) return;
+    const view = card.getAttribute('data-view');
+    if (!view) return;
+    e.preventDefault();
+    if (view === 'q1') {
+        goToBacklogWithFilter({ release: card.getAttribute('data-release') || 'Q1', status: card.getAttribute('data-status') || '' });
+        return;
+    }
+    if (view === 'roadmap') {
+        document.getElementById('roadmap-months')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+    }
+    if (view === 'upcoming-releases') {
+        document.getElementById('upcoming-releases-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+    }
+    if (view === 'priorities') {
+        document.getElementById('priorities-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+    }
+    if (view === 'releases') {
+        currentReleasesStatusFilter = card.getAttribute('data-status') || '';
+        renderReleasesList();
+        document.getElementById('releases-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+    }
+    if (view === 'meetings') {
+        const type = card.getAttribute('data-type') || '';
+        const sel = document.getElementById('meetings-type');
+        if (sel) sel.value = type;
+        renderMeetingsList();
+        document.getElementById('meetings-list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+    }
+});
+
 function showUploadMessage(text, type) {
     const el = document.getElementById('upload-message');
     if (!el) return;
@@ -1014,9 +1052,11 @@ async function renderPriorities() {
 function prioritySetItemsTableAddRow(row) {
     const tbody = document.getElementById('priority-set-items-tbody');
     if (!tbody) return;
+    const reqText = (row && row.requirement && typeof row.requirement === 'object' && row.requirement.requirement) ? row.requirement.requirement : ((row && row.requirementText) || '');
     const tr = document.createElement('tr');
     tr.innerHTML = `
-        <td><input type="text" class="priority-item-id" placeholder="e.g. VR-001" value="${escapeHtml((row && row.requirementId) || '')}"></td>
+        <td><input type="text" class="priority-item-id" placeholder="Optional, e.g. VR-001" value="${escapeHtml((row && row.requirementId) || '')}"></td>
+        <td><span class="priority-item-requirement-text text-muted">${escapeHtml(reqText)}</span></td>
         <td><input type="text" class="priority-item-start-sprint" placeholder="Sprint 1" value="${escapeHtml((row && row.startSprint) || '')}"></td>
         <td><input type="text" class="priority-item-end-sprint" placeholder="Sprint 2" value="${escapeHtml((row && row.endSprint) || '')}"></td>
         <td><input type="text" class="priority-item-assignee" placeholder="Name" value="${escapeHtml((row && row.assignee) || '')}"></td>
@@ -1047,7 +1087,9 @@ function openPrioritySetPanel(id) {
                     document.getElementById('priority-set-start-date').value = ps.startDate || '';
                     document.getElementById('priority-set-end-date').value = ps.endDate || '';
                     (ps.items || []).forEach(i => prioritySetItemsTableAddRow({
-                        requirementId: i.requirementId || i.requirement?.id,
+                        requirementId: i.requirementId || (i.requirement && i.requirement.id),
+                        requirement: i.requirement,
+                        requirementText: (i.requirement && i.requirement.requirement) || '',
                         startSprint: i.startSprint,
                         endSprint: i.endSprint,
                         assignee: i.assignee,
@@ -1146,7 +1188,8 @@ async function renderReleasesList() {
     try {
         const res = await fetch(API + '/releases', { credentials: 'include' });
         if (!res.ok) { container.innerHTML = '<p>Failed to load.</p>'; return; }
-        const list = await res.json();
+        let list = await res.json();
+        if (currentReleasesStatusFilter) list = list.filter(r => (r.status || '') === currentReleasesStatusFilter);
         container.innerHTML = list.map(rel => `
             <div class="release-card release-card-clickable" data-release-id="${rel.id}">
                 <h3>${escapeHtml(rel.name || '')} ${rel.version ? escapeHtml(rel.version) : ''}</h3>
@@ -1164,6 +1207,7 @@ async function renderReleasesList() {
 }
 
 let currentReleaseId = null;
+let currentReleasesStatusFilter = '';
 
 function openReleasePanel(releaseId) {
     currentReleaseId = releaseId;
@@ -1334,11 +1378,22 @@ function openMeetingPanel(id) {
     const panel = document.getElementById('meeting-panel');
     const titleEl = document.getElementById('meeting-panel-title');
     const viewMode = document.getElementById('meeting-view-mode');
-    const formWrap = document.getElementById('form-meeting')?.closest('.form-capture');
+    const formEl = document.getElementById('form-meeting');
     if (!panel) return;
     currentMeetingData = null;
     if (id) {
         titleEl.textContent = 'Meeting details';
+        formEl.classList.add('hidden');
+        viewMode.classList.remove('hidden');
+        document.getElementById('meeting-view-type').textContent = 'Loading…';
+        document.getElementById('meeting-view-date').textContent = '';
+        document.getElementById('meeting-view-attendees').textContent = '';
+        document.getElementById('meeting-view-agenda').textContent = '';
+        document.getElementById('meeting-view-summary').textContent = '';
+        document.getElementById('meeting-view-decisions').textContent = '';
+        document.getElementById('meeting-view-action-items').textContent = '';
+        document.getElementById('meeting-view-requirement-ids').textContent = '';
+        document.getElementById('meeting-delete-btn')?.classList.add('hidden');
         fetch(API + '/meetings/' + id, { credentials: 'include' })
             .then(res => res.ok ? res.json() : null)
             .then(m => {
@@ -1346,6 +1401,8 @@ function openMeetingPanel(id) {
                     currentMeetingData = m;
                     populateMeetingForm(m);
                     showMeetingViewMode(m);
+                } else {
+                    document.getElementById('meeting-view-type').textContent = 'Failed to load';
                 }
             });
     } else {
@@ -1354,7 +1411,7 @@ function openMeetingPanel(id) {
         document.getElementById('meeting-id').value = '';
         document.getElementById('meeting-type').value = document.getElementById('meetings-type')?.value || 'weekly';
         if (viewMode) viewMode.classList.add('hidden');
-        document.getElementById('form-meeting')?.classList.remove('hidden');
+        if (formEl) formEl.classList.remove('hidden');
         document.getElementById('meeting-form-delete')?.classList.add('hidden');
     }
     hideMessage('meeting-message');

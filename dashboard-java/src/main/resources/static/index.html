@@ -362,9 +362,9 @@
                     <a href="/api/requirements/export?view=q1" class="btn btn-secondary" download="q1-2026-requirements.csv">Download CSV</a>
                 </div>
                 <div class="view-kpi-row" id="q1-kpis">
-                    <div class="kpi-card"><span class="kpi-value" id="q1-kpi-total">—</span><span class="kpi-label">Total Q1</span></div>
-                    <div class="kpi-card"><span class="kpi-value" id="q1-kpi-not-started">—</span><span class="kpi-label">Not started</span></div>
-                    <div class="kpi-card"><span class="kpi-value" id="q1-kpi-released">—</span><span class="kpi-label">Released</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="q1" data-release="Q1" data-status="" title="Click to view requirements"><span class="kpi-value" id="q1-kpi-total">—</span><span class="kpi-label">Total Q1</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="q1" data-release="Q1" data-status="Not Started" title="Click to view requirements"><span class="kpi-value" id="q1-kpi-not-started">—</span><span class="kpi-label">Not started</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="q1" data-release="Q1" data-status="Released" title="Click to view requirements"><span class="kpi-value" id="q1-kpi-released">—</span><span class="kpi-label">Released</span></div>
                 </div>
                 <div class="charts-row view-charts-row">
                     <div class="chart-card"><h3>Q1 by status</h3><div class="chart-container"><canvas id="chart-q1-status"></canvas></div></div>
@@ -406,10 +406,10 @@
                     <select id="roadmap-year"></select>
                 </div>
                 <div class="view-kpi-row" id="roadmap-kpis">
-                    <div class="kpi-card"><span class="kpi-value" id="roadmap-kpi-total">—</span><span class="kpi-label">Total in quarter</span></div>
-                    <div class="kpi-card"><span class="kpi-value" id="roadmap-kpi-o1">—</span><span class="kpi-label">O1</span></div>
-                    <div class="kpi-card"><span class="kpi-value" id="roadmap-kpi-o2">—</span><span class="kpi-label">O2</span></div>
-                    <div class="kpi-card"><span class="kpi-value" id="roadmap-kpi-o3">—</span><span class="kpi-label">O3</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="roadmap" data-objective="" title="Click to view"><span class="kpi-value" id="roadmap-kpi-total">—</span><span class="kpi-label">Total in quarter</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="roadmap" data-objective="O1" title="Click to view O1"><span class="kpi-value" id="roadmap-kpi-o1">—</span><span class="kpi-label">O1</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="roadmap" data-objective="O2" title="Click to view O2"><span class="kpi-value" id="roadmap-kpi-o2">—</span><span class="kpi-label">O2</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="roadmap" data-objective="O3" title="Click to view O3"><span class="kpi-value" id="roadmap-kpi-o3">—</span><span class="kpi-label">O3</span></div>
                 </div>
                 <div class="charts-row view-charts-row">
                     <div class="chart-card"><h3>Requirements by month</h3><div class="chart-container"><canvas id="chart-roadmap-bar"></canvas></div></div>
@@ -425,8 +425,8 @@
                 </div>
                 <p class="hint" style="margin-bottom: 1rem;">Releases with <strong>no release date</strong> or a <strong>future release date</strong> appear here. Add or edit releases in <strong>Releases</strong>; they show here automatically until they are marked released.</p>
                 <div class="view-kpi-row" id="upcoming-kpis">
-                    <div class="kpi-card"><span class="kpi-value" id="upcoming-kpi-count">—</span><span class="kpi-label">Upcoming releases</span></div>
-                    <div class="kpi-card"><span class="kpi-value" id="upcoming-kpi-reqs">—</span><span class="kpi-label">Total requirements</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="upcoming-releases" title="Click to scroll to list"><span class="kpi-value" id="upcoming-kpi-count">—</span><span class="kpi-label">Upcoming releases</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="upcoming-releases" title="Click to scroll to list"><span class="kpi-value" id="upcoming-kpi-reqs">—</span><span class="kpi-label">Total requirements</span></div>
                 </div>
                 <div class="charts-row view-charts-row">
                     <div class="chart-card"><h3>Requirements per release</h3><div class="chart-container"><canvas id="chart-upcoming-bar"></canvas></div></div>
@@ -483,7 +483,8 @@
                                 <table class="backlog-table" id="priority-set-items-table">
                                     <thead>
                                         <tr>
-                                            <th>Requirement ID</th>
+                                            <th>Requirement ID (optional)</th>
+                                            <th>Requirement</th>
                                             <th>Start sprint</th>
                                             <th>End sprint</th>
                                             <th>Assignee</th>
@@ -506,8 +507,8 @@
                 </div>
                 <p class="hint" style="margin-bottom: 1rem;">Each tab shows priority sets for that timeframe. Create a set, then add product backlog item IDs (e.g. VR-001, VR-002) to tag them to this priority set.</p>
                 <div class="view-kpi-row" id="priorities-kpis">
-                    <div class="kpi-card"><span class="kpi-value" id="priorities-kpi-sets">—</span><span class="kpi-label">Priority sets</span></div>
-                    <div class="kpi-card"><span class="kpi-value" id="priorities-kpi-items">—</span><span class="kpi-label">Tagged items</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="priorities" title="Click to scroll to list"><span class="kpi-value" id="priorities-kpi-sets">—</span><span class="kpi-label">Priority sets</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="priorities" title="Click to scroll to list"><span class="kpi-value" id="priorities-kpi-items">—</span><span class="kpi-label">Tagged items</span></div>
                 </div>
                 <div class="charts-row view-charts-row">
                     <div class="chart-card"><h3>Items per set</h3><div class="chart-container"><canvas id="chart-priorities-bar"></canvas></div></div>
@@ -521,9 +522,9 @@
                     <button type="button" class="btn btn-primary" id="releases-new">New release</button>
                 </div>
                 <div class="view-kpi-row" id="releases-kpis">
-                    <div class="kpi-card"><span class="kpi-value" id="releases-kpi-total">—</span><span class="kpi-label">Total releases</span></div>
-                    <div class="kpi-card"><span class="kpi-value" id="releases-kpi-planned">—</span><span class="kpi-label">Planned</span></div>
-                    <div class="kpi-card"><span class="kpi-value" id="releases-kpi-released">—</span><span class="kpi-label">Released</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="releases" data-status="" title="Click to view"><span class="kpi-value" id="releases-kpi-total">—</span><span class="kpi-label">Total releases</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="releases" data-status="planned" title="Click to view planned"><span class="kpi-value" id="releases-kpi-planned">—</span><span class="kpi-label">Planned</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="releases" data-status="released" title="Click to view released"><span class="kpi-value" id="releases-kpi-released">—</span><span class="kpi-label">Released</span></div>
                 </div>
                 <div class="charts-row view-charts-row">
                     <div class="chart-card"><h3>By status</h3><div class="chart-container"><canvas id="chart-releases-pie"></canvas></div></div>
@@ -684,9 +685,9 @@
                 </div>
                 <p class="hint" style="margin-bottom: 1rem;">Create a meeting to capture name (type + date), agenda, summary (what was discussed), decisions, and action items — your Minutes of Meeting (MOM).</p>
                 <div class="view-kpi-row" id="meetings-kpis">
-                    <div class="kpi-card"><span class="kpi-value" id="meetings-kpi-total">—</span><span class="kpi-label">Total meetings</span></div>
-                    <div class="kpi-card"><span class="kpi-value" id="meetings-kpi-weekly">—</span><span class="kpi-label">Weekly</span></div>
-                    <div class="kpi-card"><span class="kpi-value" id="meetings-kpi-fortnightly">—</span><span class="kpi-label">Fortnightly</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="meetings" data-type="" title="Click to view"><span class="kpi-value" id="meetings-kpi-total">—</span><span class="kpi-label">Total meetings</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="meetings" data-type="weekly" title="Click to view weekly"><span class="kpi-value" id="meetings-kpi-weekly">—</span><span class="kpi-label">Weekly</span></div>
+                    <div class="kpi-card kpi-clickable" data-view="meetings" data-type="fortnightly" title="Click to view fortnightly"><span class="kpi-value" id="meetings-kpi-fortnightly">—</span><span class="kpi-label">Fortnightly</span></div>
                 </div>
                 <div class="charts-row view-charts-row">
                     <div class="chart-card"><h3>By type</h3><div class="chart-container"><canvas id="chart-meetings-pie"></canvas></div></div>
