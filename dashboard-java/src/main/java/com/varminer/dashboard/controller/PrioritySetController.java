@@ -18,6 +18,11 @@ public class PrioritySetController {
         this.prioritySetService = prioritySetService;
     }
 
+    @GetMapping("/priority-sets/requirement-ids")
+    public List<String> requirementIdsInPrioritySets() {
+        return prioritySetService.findRequirementIdsInAnyPrioritySet();
+    }
+
     @GetMapping("/priority-sets")
     public List<PrioritySetDto> list(@RequestParam(required = false) String timeframe) {
         return prioritySetService.findByTimeframe(timeframe);

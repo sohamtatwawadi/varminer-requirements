@@ -17,8 +17,11 @@ public class PrioritySetItemEntity {
     private PrioritySetEntity prioritySet;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requirement_id", nullable = false)
+    @JoinColumn(name = "requirement_id")
     private RequirementEntity requirement;
+
+    @Column(name = "requirement_text", columnDefinition = "TEXT")
+    private String requirementText;
 
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
@@ -41,6 +44,8 @@ public class PrioritySetItemEntity {
     public void setPrioritySet(PrioritySetEntity prioritySet) { this.prioritySet = prioritySet; }
     public RequirementEntity getRequirement() { return requirement; }
     public void setRequirement(RequirementEntity requirement) { this.requirement = requirement; }
+    public String getRequirementText() { return requirementText; }
+    public void setRequirementText(String requirementText) { this.requirementText = requirementText; }
     public int getSortOrder() { return sortOrder; }
     public void setSortOrder(int sortOrder) { this.sortOrder = sortOrder; }
     public String getStartSprint() { return startSprint; }

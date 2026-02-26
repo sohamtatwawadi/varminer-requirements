@@ -54,6 +54,11 @@ public class PrioritySetService {
         return prioritySetRepository.findById(id).map(this::toDto);
     }
 
+    @Transactional(readOnly = true)
+    public List<String> findRequirementIdsInAnyPrioritySet() {
+        return prioritySetItemRepository.findRequirementExternalIdsInAnyPrioritySet();
+    }
+
     @Transactional
     public PrioritySetDto create(PrioritySetDto dto) {
         PrioritySetEntity e = new PrioritySetEntity();
@@ -67,18 +72,20 @@ public class PrioritySetService {
                 final int order = i;
                 PrioritySetItemDto it = dto.getItems().get(i);
                 String extId = it.getRequirementId() != null ? it.getRequirementId().trim() : null;
-                if (extId == null || extId.isEmpty()) continue;
-                requirementRepository.findByExternalId(extId).ifPresent(req -> {
-                    PrioritySetItemEntity item = new PrioritySetItemEntity();
-                    item.setPrioritySet(saved);
-                    item.setRequirement(req);
-                    item.setSortOrder(it.getSortOrder() != null ? it.getSortOrder() : order);
-                    item.setStartSprint(it.getStartSprint());
-                    item.setEndSprint(it.getEndSprint());
-                    item.setAssignee(it.getAssignee());
-                    item.setReleaseDate(it.getReleaseDate());
-                    saved.getItems().add(item);
-                });
+                String reqText = it.getRequirementText() != null ? it.getRequirementText().trim() : null;
+                if ((extId == null || extId.isEmpty()) && (reqText == null || reqText.isEmpty())) continue;
+                PrioritySetItemEntity item = new PrioritySetItemEntity();
+                item.setPrioritySet(saved);
+                item.setSortOrder(it.getSortOrder() != null ? it.getSortOrder() : order);
+                item.setStartSprint(it.getStartSprint());
+                item.setEndSprint(it.getEndSprint());
+                item.setAssignee(it.getAssignee());
+                item.setReleaseDate(it.getReleaseDate());
+                item.setRequirementText(reqText);
+                if (extId != null && !extId.isEmpty()) {
+                    requirementRepository.findByExternalId(extId).ifPresent(item::setRequirement);
+                }
+                if (item.getRequirement() != null || (reqText != null && !reqText.isEmpty())) saved.getItems().add(item);
             }
             prioritySetRepository.save(saved);
         }
@@ -100,18 +107,20 @@ public class PrioritySetService {
                     final int order = i;
                     PrioritySetItemDto it = dto.getItems().get(i);
                     String extId = it.getRequirementId() != null ? it.getRequirementId().trim() : null;
-                    if (extId == null || extId.isEmpty()) continue;
-                    requirementRepository.findByExternalId(extId).ifPresent(req -> {
-                        PrioritySetItemEntity item = new PrioritySetItemEntity();
-                        item.setPrioritySet(saved);
-                        item.setRequirement(req);
-                        item.setSortOrder(it.getSortOrder() != null ? it.getSortOrder() : order);
-                        item.setStartSprint(it.getStartSprint());
-                        item.setEndSprint(it.getEndSprint());
-                        item.setAssignee(it.getAssignee());
-                        item.setReleaseDate(it.getReleaseDate());
-                        saved.getItems().add(item);
-                    });
+                    String reqText = it.getRequirementText() != null ? it.getRequirementText().trim() : null;
+                    if ((extId == null || extId.isEmpty()) && (reqText == null || reqText.isEmpty())) continue;
+                    PrioritySetItemEntity item = new PrioritySetItemEntity();
+                    item.setPrioritySet(saved);
+                    item.setSortOrder(it.getSortOrder() != null ? it.getSortOrder() : order);
+                    item.setStartSprint(it.getStartSprint());
+                    item.setEndSprint(it.getEndSprint());
+                    item.setAssignee(it.getAssignee());
+                    item.setReleaseDate(it.getReleaseDate());
+                    item.setRequirementText(reqText);
+                    if (extId != null && !extId.isEmpty()) {
+                        requirementRepository.findByExternalId(extId).ifPresent(item::setRequirement);
+                    }
+                    if (item.getRequirement() != null || (reqText != null && !reqText.isEmpty())) saved.getItems().add(item);
                 }
                 prioritySetRepository.save(saved);
             }
@@ -136,13 +145,14 @@ public class PrioritySetService {
         dto.setItems(e.getItems().stream().map(item -> {
             PrioritySetItemDto idto = new PrioritySetItemDto();
             idto.setId(item.getId());
-            idto.setRequirementId(item.getRequirement().getExternalId());
+            idto.setRequirementId(item.getRequirement() != null ? item.getRequirement().getExternalId() : null);
+            idto.setRequirementText(item.getRequirementText() != null ? item.getRequirementText() : (item.getRequirement() != null ? item.getRequirement().getRequirement() : null));
             idto.setSortOrder(item.getSortOrder());
             idto.setStartSprint(item.getStartSprint());
             idto.setEndSprint(item.getEndSprint());
             idto.setAssignee(item.getAssignee());
             idto.setReleaseDate(item.getReleaseDate());
-            idto.setRequirement(requirementMapper.toDto(item.getRequirement()));
+            idto.setRequirement(item.getRequirement() != null ? requirementMapper.toDto(item.getRequirement()) : null);
             return idto;
         }).collect(Collectors.toList()));
         return dto;

@@ -647,6 +647,9 @@ body {
 .status-Production\.Ready { background: #dbeafe; color: var(--accent); }
 .status-Released { background: var(--success-light); color: var(--success); }
 
+.badge-priority { display: inline-block; font-size: 0.75rem; padding: 0.15rem 0.4rem; background: var(--accent-light, #dbeafe); color: var(--accent, #2563eb); border-radius: var(--radius-sm); white-space: nowrap; }
+.backlog-table .col-priority { width: 6rem; }
+
 /* Main view (left side when edit panel is open) */
 .main-view {
     flex: 1;

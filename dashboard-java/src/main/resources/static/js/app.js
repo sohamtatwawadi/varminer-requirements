@@ -20,6 +20,7 @@ const views = {
 
 let allRequirements = [];
 let currentUser = null;
+let priorityRequirementIds = [];
 
 function setView(name) {
     document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
@@ -38,7 +39,11 @@ function setView(name) {
         refreshCharts();
         refreshDashboardSummary();
     }
-    if (name === 'backlog') { renderBacklog(); refreshViewCharts('backlog'); }
+    if (name === 'backlog') {
+        renderBacklog();
+        fetch(API + '/priority-sets/requirement-ids', { credentials: 'include' }).then(res => res.ok ? res.json() : []).then(ids => { priorityRequirementIds = ids || []; renderBacklog(); }).catch(() => {});
+        refreshViewCharts('backlog');
+    }
     if (name === 'q1') { renderQ1(); refreshViewCharts('q1'); }
     if (name === 'roadmap') { renderRoadmap(); refreshViewCharts('roadmap'); }
     if (name === 'upcoming-releases') { renderUpcomingReleases(); refreshViewCharts('upcoming-releases'); }
@@ -498,10 +503,12 @@ function renderBacklog() {
     const list = filterBacklog();
     const tbody = document.getElementById('backlog-tbody');
     const depFlag = r => (r.dependency && r.dependency.trim() && r.dependency.trim() !== '—') ? 'Yes' : '—';
+    const isPriority = r => priorityRequirementIds.indexOf(r.id) !== -1;
     const pencilSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>';
     tbody.innerHTML = list.map(r => `
         <tr data-id="${(r.id || '').replace(/"/g, '&quot;')}">
             <td class="id">${escapeHtml(r.id || '')}</td>
+            <td class="col-priority">${isPriority(r) ? '<span class="badge-priority" title="In a priority set">★ Priority</span>' : '—'}</td>
             <td>${escapeHtml((r.requirement || '').slice(0, 60))}${(r.requirement || '').length > 60 ? '…' : ''}</td>
             <td>${escapeHtml(r.type || '')}</td>
             <td>${escapeHtml(r.priority || '')}</td>
@@ -618,11 +625,15 @@ function populateReleaseFilter() {
 async function loadBacklog() {
     try {
         allRequirements = await fetchRequirements();
+        try {
+            const res = await fetch(API + '/priority-sets/requirement-ids', { credentials: 'include' });
+            priorityRequirementIds = res.ok ? await res.json() : [];
+        } catch (_) { priorityRequirementIds = []; }
         populateReleaseFilter();
         renderBacklog();
     } catch (e) {
         allRequirements = [];
-        document.getElementById('backlog-tbody').innerHTML = '<tr><td colspan="12">Failed to load backlog.</td></tr>';
+        document.getElementById('backlog-tbody').innerHTML = '<tr><td colspan="13">Failed to load backlog.</td></tr>';
     }
 }
 
@@ -1056,7 +1067,7 @@ function prioritySetItemsTableAddRow(row) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td><input type="text" class="priority-item-id" placeholder="Optional, e.g. VR-001" value="${escapeHtml((row && row.requirementId) || '')}"></td>
-        <td><span class="priority-item-requirement-text text-muted">${escapeHtml(reqText)}</span></td>
+        <td><input type="text" class="priority-item-requirement-text" placeholder="Write requirement or link by ID above" value="${escapeHtml(reqText)}"></td>
         <td><input type="text" class="priority-item-start-sprint" placeholder="Sprint 1" value="${escapeHtml((row && row.startSprint) || '')}"></td>
         <td><input type="text" class="priority-item-end-sprint" placeholder="Sprint 2" value="${escapeHtml((row && row.endSprint) || '')}"></td>
         <td><input type="text" class="priority-item-assignee" placeholder="Name" value="${escapeHtml((row && row.assignee) || '')}"></td>
@@ -1155,9 +1166,11 @@ function closePrioritySetPanel() {
         const items = [];
         rows.forEach((tr, i) => {
             const rid = (tr.querySelector('.priority-item-id')?.value || '').trim();
-            if (!rid) return;
+            const reqText = (tr.querySelector('.priority-item-requirement-text')?.value || '').trim();
+            if (!rid && !reqText) return;
             items.push({
-                requirementId: rid,
+                requirementId: rid || null,
+                requirementText: reqText || null,
                 sortOrder: i,
                 startSprint: (tr.querySelector('.priority-item-start-sprint')?.value || '').trim() || null,
                 endSprint: (tr.querySelector('.priority-item-end-sprint')?.value || '').trim() || null,

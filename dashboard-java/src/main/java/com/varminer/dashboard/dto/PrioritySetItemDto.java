@@ -7,6 +7,7 @@ import java.time.LocalDate;
 public class PrioritySetItemDto {
     private Long id;
     private String requirementId;
+    private String requirementText;
     private Integer sortOrder;
     private String startSprint;
     private String endSprint;
@@ -18,6 +19,8 @@ public class PrioritySetItemDto {
     public void setId(Long id) { this.id = id; }
     public String getRequirementId() { return requirementId; }
     public void setRequirementId(String requirementId) { this.requirementId = requirementId; }
+    public String getRequirementText() { return requirementText; }
+    public void setRequirementText(String requirementText) { this.requirementText = requirementText; }
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
     public String getStartSprint() { return startSprint; }
