@@ -477,12 +477,28 @@
                             </div>
                         </div>
                         <div class="form-row">
-                            <label>Product backlog item IDs (tag requirements)</label>
-                            <input type="text" id="priority-set-requirement-ids" placeholder="e.g. VR-001, VR-002, VR-003 (comma-separated)">
-                            <span class="hint">Use IDs from the Product backlog. Order here = priority order.</span>
+                            <label>Priority items (optional)</label>
+                            <p class="hint">Use IDs from the Product backlog. Order = priority order. Add rows and fill start/end sprint, assignee, release date per item.</p>
+                            <div class="table-wrap" style="margin-top: 0.5rem;">
+                                <table class="backlog-table" id="priority-set-items-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Requirement ID</th>
+                                            <th>Start sprint</th>
+                                            <th>End sprint</th>
+                                            <th>Assignee</th>
+                                            <th>Release date</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="priority-set-items-tbody"></tbody>
+                                </table>
+                            </div>
+                            <button type="button" class="btn btn-secondary" id="priority-set-add-item" style="margin-top: 0.5rem;">Add item</button>
                         </div>
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Save</button>
+                            <button type="button" class="btn btn-danger hidden" id="priority-set-delete">Delete priority set</button>
                             <button type="button" class="btn btn-secondary" id="priority-set-panel-cancel">Cancel</button>
                         </div>
                     </form>
@@ -504,71 +520,6 @@
                 <div class="toolbar">
                     <button type="button" class="btn btn-primary" id="releases-new">New release</button>
                 </div>
-                <!-- Release create/edit panel (above KPIs and charts) -->
-                <div class="detail-panel hidden card" id="release-panel" style="margin-top: 1rem; margin-bottom: 1rem;">
-                    <div class="detail-header">
-                        <h3 id="release-panel-title">New release</h3>
-                        <button type="button" class="btn-close" id="release-panel-close" aria-label="Close">×</button>
-                    </div>
-                    <form id="form-release" class="form-capture form-detail">
-                        <input type="hidden" id="release-id" />
-                        <div class="form-grid">
-                            <div class="form-row">
-                                <label>Name <span class="req">*</span></label>
-                                <input type="text" id="release-name" required placeholder="e.g. Q1 2026 Release">
-                            </div>
-                            <div class="form-row">
-                                <label>Version</label>
-                                <input type="text" id="release-version" placeholder="e.g. 2.1.0">
-                            </div>
-                        </div>
-                        <div class="form-grid">
-                            <div class="form-row">
-                                <label>Planned date</label>
-                                <input type="date" id="release-planned-date">
-                            </div>
-                            <div class="form-row">
-                                <label>Release date</label>
-                                <input type="date" id="release-release-date">
-                            </div>
-                            <div class="form-row">
-                                <label>Status</label>
-                                <select id="release-status">
-                                    <option value="planned">Planned</option>
-                                    <option value="in_progress">In progress</option>
-                                    <option value="released">Released</option>
-                                    <option value="cancelled">Cancelled</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <label>Release notes (Markdown)</label>
-                            <textarea id="release-notes" rows="6" placeholder="What shipped, highlights, breaking changes…"></textarea>
-                        </div>
-                        <div class="form-row">
-                            <label>Internal comments / issues during release</label>
-                            <textarea id="release-internal-comments" rows="3" placeholder="Any issues, rollbacks, or internal notes…"></textarea>
-                        </div>
-                        <div class="form-row">
-                            <label>Requirement IDs (comma-separated)</label>
-                            <input type="text" id="release-requirement-ids" placeholder="e.g. VR-001, VR-002">
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">Save release</button>
-                            <button type="button" class="btn btn-secondary" id="release-panel-cancel">Cancel</button>
-                        </div>
-                    </form>
-                    <div id="release-message" class="message hidden"></div>
-                    <!-- Comments (shown when editing) -->
-                    <div id="release-comments-section" class="hidden" style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
-                        <h4 style="margin: 0 0 0.5rem;">Comments</h4>
-                        <ul id="release-comments-list"></ul>
-                        <div class="form-row" style="margin-top: 0.5rem;">
-                            <input type="text" id="release-new-comment" placeholder="Add a comment…">
-                            <button type="button" class="btn btn-secondary" id="release-add-comment" style="margin-top: 0.5rem;">Add comment</button>
-                        </div>
-                    </div>
-                </div>
                 <div class="view-kpi-row" id="releases-kpis">
                     <div class="kpi-card"><span class="kpi-value" id="releases-kpi-total">—</span><span class="kpi-label">Total releases</span></div>
                     <div class="kpi-card"><span class="kpi-value" id="releases-kpi-planned">—</span><span class="kpi-label">Planned</span></div>
@@ -580,6 +531,71 @@
                 <div id="releases-list" class="releases-cards"></div>
             </section>
 
+            <!-- Release create/edit panel (shared: usable from Releases and Upcoming Releases) -->
+            <div class="detail-panel hidden card" id="release-panel" style="margin-top: 1rem; margin-bottom: 1rem;">
+                <div class="detail-header">
+                    <h3 id="release-panel-title">New release</h3>
+                    <button type="button" class="btn-close" id="release-panel-close" aria-label="Close">×</button>
+                </div>
+                <form id="form-release" class="form-capture form-detail">
+                    <input type="hidden" id="release-id" />
+                    <div class="form-grid">
+                        <div class="form-row">
+                            <label>Name <span class="req">*</span></label>
+                            <input type="text" id="release-name" required placeholder="e.g. Q1 2026 Release">
+                        </div>
+                        <div class="form-row">
+                            <label>Version</label>
+                            <input type="text" id="release-version" placeholder="e.g. 2.1.0">
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-row">
+                            <label>Planned date</label>
+                            <input type="date" id="release-planned-date">
+                        </div>
+                        <div class="form-row">
+                            <label>Release date</label>
+                            <input type="date" id="release-release-date">
+                        </div>
+                        <div class="form-row">
+                            <label>Status</label>
+                            <select id="release-status">
+                                <option value="planned">Planned</option>
+                                <option value="in_progress">In progress</option>
+                                <option value="released">Released</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <label>Release notes (Markdown)</label>
+                        <textarea id="release-notes" rows="6" placeholder="What shipped, highlights, breaking changes…"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <label>Internal comments / issues during release</label>
+                        <textarea id="release-internal-comments" rows="3" placeholder="Any issues, rollbacks, or internal notes…"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <label>Requirement IDs (comma-separated)</label>
+                        <input type="text" id="release-requirement-ids" placeholder="e.g. VR-001, VR-002">
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Save release</button>
+                        <button type="button" class="btn btn-secondary" id="release-panel-cancel">Cancel</button>
+                    </div>
+                </form>
+                <div id="release-message" class="message hidden"></div>
+                <div id="release-comments-section" class="hidden" style="margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1rem;">
+                    <h4 style="margin: 0 0 0.5rem;">Comments</h4>
+                    <ul id="release-comments-list"></ul>
+                    <div class="form-row" style="margin-top: 0.5rem;">
+                        <input type="text" id="release-new-comment" placeholder="Add a comment…">
+                        <button type="button" class="btn btn-secondary" id="release-add-comment" style="margin-top: 0.5rem;">Add comment</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Meetings (MOM: agenda, summary, decisions, action items) -->
             <section class="view hidden" id="view-meetings">
                 <div class="toolbar">
@@ -587,6 +603,9 @@
                         <option value="">All</option>
                         <option value="weekly">Weekly</option>
                         <option value="fortnightly">Fortnightly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="ad-hoc">Ad-hoc</option>
+                        <option value="other">Other</option>
                     </select>
                     <button type="button" class="btn btn-primary" id="meetings-new">New meeting</button>
                 </div>
@@ -596,6 +615,22 @@
                         <h3 id="meeting-panel-title">New meeting</h3>
                         <button type="button" class="btn-close" id="meeting-panel-close" aria-label="Close">×</button>
                     </div>
+                    <!-- View mode: read-only meeting details (shown when opening existing meeting) -->
+                    <div id="meeting-view-mode" class="hidden" style="padding: 0 1rem 1rem;">
+                        <div class="form-row"><strong>Type</strong><span id="meeting-view-type"></span></div>
+                        <div class="form-row"><strong>Date</strong><span id="meeting-view-date"></span></div>
+                        <div class="form-row"><strong>Attendees</strong><span id="meeting-view-attendees" class="text-muted"></span></div>
+                        <div class="form-row"><strong>Agenda</strong><pre id="meeting-view-agenda" class="view-pre"></pre></div>
+                        <div class="form-row"><strong>Summary (MOM)</strong><pre id="meeting-view-summary" class="view-pre"></pre></div>
+                        <div class="form-row"><strong>Decisions</strong><pre id="meeting-view-decisions" class="view-pre"></pre></div>
+                        <div class="form-row"><strong>Action items</strong><pre id="meeting-view-action-items" class="view-pre"></pre></div>
+                        <div class="form-row"><strong>Linked requirements</strong><span id="meeting-view-requirement-ids" class="text-muted"></span></div>
+                        <div class="form-actions" style="margin-top: 1rem;">
+                            <button type="button" class="btn btn-primary" id="meeting-view-edit">Edit</button>
+                            <button type="button" class="btn btn-danger hidden" id="meeting-delete-btn" data-meeting-id="">Delete meeting</button>
+                            <button type="button" class="btn btn-secondary" id="meeting-view-close">Close</button>
+                        </div>
+                    </div>
                     <form id="form-meeting" class="form-capture form-detail">
                         <input type="hidden" id="meeting-id" />
                         <div class="form-grid">
@@ -604,6 +639,9 @@
                                 <select id="meeting-type" required>
                                     <option value="weekly">Weekly</option>
                                     <option value="fortnightly">Fortnightly</option>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="ad-hoc">Ad-hoc</option>
+                                    <option value="other">Other</option>
                                 </select>
                             </div>
                             <div class="form-row">
@@ -638,6 +676,7 @@
                         </div>
                         <div class="form-actions">
                             <button type="submit" class="btn btn-primary">Save meeting</button>
+                            <button type="button" class="btn btn-danger hidden" id="meeting-form-delete" data-meeting-id="">Delete meeting</button>
                             <button type="button" class="btn btn-secondary" id="meeting-panel-cancel">Cancel</button>
                         </div>
                     </form>

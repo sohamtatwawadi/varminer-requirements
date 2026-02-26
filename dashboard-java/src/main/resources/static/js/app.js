@@ -189,15 +189,18 @@ function refreshMeetingsCharts() {
         .then(res => res.ok ? res.json() : [])
         .then(list => {
             const total = list.length;
-            const weekly = list.filter(m => (m.meetingType || '') === 'weekly').length;
-            const fortnightly = list.filter(m => (m.meetingType || '') === 'fortnightly').length;
+            const typeCounts = {};
+            list.forEach(m => { const t = m.meetingType || 'other'; typeCounts[t] = (typeCounts[t] || 0) + 1; });
+            const typeLabels = Object.keys(typeCounts).sort();
+            const typeData = typeLabels.map(l => typeCounts[l]);
             setEl('meetings-kpi-total', total);
-            setEl('meetings-kpi-weekly', weekly);
-            setEl('meetings-kpi-fortnightly', fortnightly);
+            setEl('meetings-kpi-weekly', typeCounts['weekly'] || 0);
+            setEl('meetings-kpi-fortnightly', typeCounts['fortnightly'] || 0);
             viewCharts.meetings = [];
             const mp = document.getElementById('chart-meetings-pie');
             const ml = document.getElementById('chart-meetings-line');
-            if (mp) viewCharts.meetings.push(new Chart(mp, chartOpts.pie(['Weekly', 'Fortnightly'], [weekly, fortnightly], ['#2563eb', '#8b5cf6'])));
+            const pieLabels = typeLabels.map(l => l.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
+            if (mp) viewCharts.meetings.push(new Chart(mp, chartOpts.pie(pieLabels, typeData, ['#2563eb', '#8b5cf6', '#059669', '#d97706', '#6b7280'].concat(CHART_COLORS.status))));
             const byMonth = {};
             list.forEach(m => {
                 const month = (m.meetingDate || '').slice(0, 7);
@@ -962,9 +965,7 @@ async function renderUpcomingReleases() {
         `).join('') || '<p>No upcoming releases.</p>';
         container.querySelectorAll('.release-card-clickable').forEach(card => {
             card.addEventListener('click', () => {
-                const id = Number(card.getAttribute('data-release-id'));
-                setView('releases');
-                setTimeout(() => openReleasePanel(id), 50);
+                openReleasePanel(Number(card.getAttribute('data-release-id')));
             });
         });
     } catch (e) {
@@ -975,10 +976,7 @@ async function renderUpcomingReleases() {
 (function setupUpcomingReleases() {
     const btnAdd = document.getElementById('upcoming-add-release');
     const btnRefresh = document.getElementById('upcoming-refresh');
-    if (btnAdd) btnAdd.addEventListener('click', () => {
-        setView('releases');
-        setTimeout(() => openReleasePanel(null), 50);
-    });
+    if (btnAdd) btnAdd.addEventListener('click', () => openReleasePanel(null));
     if (btnRefresh) btnRefresh.addEventListener('click', () => renderUpcomingReleases());
 })();
 
@@ -1013,12 +1011,32 @@ async function renderPriorities() {
     }
 }
 
+function prioritySetItemsTableAddRow(row) {
+    const tbody = document.getElementById('priority-set-items-tbody');
+    if (!tbody) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td><input type="text" class="priority-item-id" placeholder="e.g. VR-001" value="${escapeHtml((row && row.requirementId) || '')}"></td>
+        <td><input type="text" class="priority-item-start-sprint" placeholder="Sprint 1" value="${escapeHtml((row && row.startSprint) || '')}"></td>
+        <td><input type="text" class="priority-item-end-sprint" placeholder="Sprint 2" value="${escapeHtml((row && row.endSprint) || '')}"></td>
+        <td><input type="text" class="priority-item-assignee" placeholder="Name" value="${escapeHtml((row && row.assignee) || '')}"></td>
+        <td><input type="date" class="priority-item-release-date" value="${(row && row.releaseDate) || ''}"></td>
+        <td><button type="button" class="btn-remove-row" aria-label="Remove">×</button></td>
+    `;
+    tr.querySelector('.btn-remove-row')?.addEventListener('click', () => tr.remove());
+    tbody.appendChild(tr);
+}
+
 function openPrioritySetPanel(id) {
     const panel = document.getElementById('priority-set-panel');
     const titleEl = document.getElementById('priority-set-panel-title');
+    const btnDelete = document.getElementById('priority-set-delete');
+    const tbody = document.getElementById('priority-set-items-tbody');
     if (!panel) return;
+    if (tbody) tbody.innerHTML = '';
     if (id) {
         titleEl.textContent = 'Edit priority set';
+        if (btnDelete) { btnDelete.classList.remove('hidden'); btnDelete.dataset.prioritySetId = String(id); }
         fetch(API + '/priority-sets/' + id, { credentials: 'include' })
             .then(res => res.ok ? res.json() : null)
             .then(ps => {
@@ -1028,7 +1046,14 @@ function openPrioritySetPanel(id) {
                     document.getElementById('priority-set-timeframe').value = ps.timeframe || 'week';
                     document.getElementById('priority-set-start-date').value = ps.startDate || '';
                     document.getElementById('priority-set-end-date').value = ps.endDate || '';
-                    document.getElementById('priority-set-requirement-ids').value = (ps.items || []).map(i => i.requirementId || i.requirement?.id).filter(Boolean).join(', ');
+                    (ps.items || []).forEach(i => prioritySetItemsTableAddRow({
+                        requirementId: i.requirementId || i.requirement?.id,
+                        startSprint: i.startSprint,
+                        endSprint: i.endSprint,
+                        assignee: i.assignee,
+                        releaseDate: i.releaseDate
+                    }));
+                    if (!(ps.items && ps.items.length)) prioritySetItemsTableAddRow(null);
                 }
             });
     } else {
@@ -1036,6 +1061,8 @@ function openPrioritySetPanel(id) {
         document.getElementById('form-priority-set').reset();
         document.getElementById('priority-set-id').value = '';
         document.getElementById('priority-set-timeframe').value = currentPrioritiesTimeframe;
+        if (btnDelete) btnDelete.classList.add('hidden');
+        prioritySetItemsTableAddRow(null);
     }
     hideMessage('priority-set-message');
     panel.classList.remove('hidden');
@@ -1061,6 +1088,20 @@ function closePrioritySetPanel() {
     if (btnNew) btnNew.addEventListener('click', () => openPrioritySetPanel(null));
     if (btnClose) btnClose.addEventListener('click', closePrioritySetPanel);
     if (btnCancel) btnCancel.addEventListener('click', closePrioritySetPanel);
+    const btnAddItem = document.getElementById('priority-set-add-item');
+    const btnDelete = document.getElementById('priority-set-delete');
+    if (btnAddItem) btnAddItem.addEventListener('click', () => prioritySetItemsTableAddRow(null));
+    if (btnDelete) btnDelete.addEventListener('click', async () => {
+        const setId = btnDelete.dataset.prioritySetId;
+        if (!setId || !confirm('Delete this priority set?')) return;
+        try {
+            const res = await fetch(API + '/priority-sets/' + setId, { method: 'DELETE', credentials: 'include' });
+            if (res.ok || res.status === 204) { closePrioritySetPanel(); renderPriorities(); }
+            else showMessage('priority-set-message', 'Delete failed.', 'error');
+        } catch (err) {
+            showMessage('priority-set-message', err.message || 'Delete failed.', 'error');
+        }
+    });
     if (form) form.addEventListener('submit', async e => {
         e.preventDefault();
         const id = document.getElementById('priority-set-id').value;
@@ -1068,9 +1109,20 @@ function closePrioritySetPanel() {
         const timeframe = document.getElementById('priority-set-timeframe').value;
         const startDate = document.getElementById('priority-set-start-date').value || null;
         const endDate = document.getElementById('priority-set-end-date').value || null;
-        const idsStr = document.getElementById('priority-set-requirement-ids').value;
-        const requirementIds = idsStr.split(',').map(s => s.trim()).filter(Boolean);
-        const items = requirementIds.map((rid, i) => ({ requirementId: rid, sortOrder: i }));
+        const rows = document.querySelectorAll('#priority-set-items-tbody tr');
+        const items = [];
+        rows.forEach((tr, i) => {
+            const rid = (tr.querySelector('.priority-item-id')?.value || '').trim();
+            if (!rid) return;
+            items.push({
+                requirementId: rid,
+                sortOrder: i,
+                startSprint: (tr.querySelector('.priority-item-start-sprint')?.value || '').trim() || null,
+                endSprint: (tr.querySelector('.priority-item-end-sprint')?.value || '').trim() || null,
+                assignee: (tr.querySelector('.priority-item-assignee')?.value || '').trim() || null,
+                releaseDate: (tr.querySelector('.priority-item-release-date')?.value || '') || null
+            });
+        });
         if (!name) { showMessage('priority-set-message', 'Name is required.', 'error'); return; }
         hideMessage('priority-set-message');
         const body = { name, timeframe, startDate, endDate, items };
@@ -1153,6 +1205,7 @@ function closeReleasePanel() {
     document.getElementById('release-panel').classList.add('hidden');
     currentReleaseId = null;
     renderReleasesList();
+    renderUpcomingReleases();
 }
 
 function renderReleaseComments(comments) {
@@ -1198,7 +1251,7 @@ function renderReleaseComments(comments) {
             if (!res.ok) throw new Error(await res.text() || 'Save failed');
             showMessage('release-message', 'Saved.', 'success');
             if (!id) closeReleasePanel();
-            else renderReleasesList();
+            else { renderReleasesList(); renderUpcomingReleases(); }
         } catch (err) {
             showMessage('release-message', err.message || 'Failed to save.', 'error');
         }
@@ -1224,27 +1277,75 @@ function renderReleaseComments(comments) {
     });
 })();
 
+let currentMeetingData = null;
+
+function populateMeetingForm(m) {
+    if (!m) return;
+    document.getElementById('meeting-id').value = m.id || '';
+    document.getElementById('meeting-type').value = m.meetingType || 'weekly';
+    document.getElementById('meeting-date').value = m.meetingDate || '';
+    document.getElementById('meeting-attendees').value = m.attendees || '';
+    document.getElementById('meeting-agenda').value = m.agenda || '';
+    document.getElementById('meeting-summary').value = m.summary || '';
+    document.getElementById('meeting-decisions').value = (m.decisions || []).join('\n');
+    document.getElementById('meeting-action-items').value = (m.actionItems || []).map(a =>
+        [a.actionText, a.owner || '', a.dueDate || '', a.status || 'open'].join(' | ')
+    ).join('\n');
+    document.getElementById('meeting-requirement-ids').value = (m.requirementIds || []).join(', ');
+}
+
+function showMeetingViewMode(m) {
+    const viewMode = document.getElementById('meeting-view-mode');
+    const formEl = document.getElementById('form-meeting');
+    if (!viewMode || !formEl) return;
+    document.getElementById('meeting-view-type').textContent = m.meetingType || '—';
+    document.getElementById('meeting-view-date').textContent = m.meetingDate || '—';
+    document.getElementById('meeting-view-attendees').textContent = m.attendees || '—';
+    document.getElementById('meeting-view-agenda').textContent = m.agenda || '—';
+    document.getElementById('meeting-view-summary').textContent = m.summary || '—';
+    document.getElementById('meeting-view-decisions').textContent = (m.decisions || []).join('\n') || '—';
+    const actionStr = (m.actionItems || []).map(a =>
+        [a.actionText, a.owner || '', a.dueDate || '', a.status || 'open'].join(' | ')
+    ).join('\n');
+    document.getElementById('meeting-view-action-items').textContent = actionStr || '—';
+    document.getElementById('meeting-view-requirement-ids').textContent = (m.requirementIds || []).join(', ') || '—';
+    const btnDelete = document.getElementById('meeting-delete-btn');
+    if (btnDelete) {
+        btnDelete.dataset.meetingId = m.id || '';
+        btnDelete.classList.toggle('hidden', !(currentUser && currentUser.role === 'ADMIN'));
+    }
+    viewMode.classList.remove('hidden');
+    formEl.classList.add('hidden');
+}
+
+function showMeetingEditMode() {
+    const viewMode = document.getElementById('meeting-view-mode');
+    const formEl = document.getElementById('form-meeting');
+    if (viewMode) viewMode.classList.add('hidden');
+    if (formEl) formEl.classList.remove('hidden');
+    const btnFormDelete = document.getElementById('meeting-form-delete');
+    if (btnFormDelete && currentMeetingData?.id) {
+        btnFormDelete.dataset.meetingId = currentMeetingData.id;
+        btnFormDelete.classList.toggle('hidden', !(currentUser && currentUser.role === 'ADMIN'));
+    } else if (btnFormDelete) btnFormDelete.classList.add('hidden');
+}
+
 function openMeetingPanel(id) {
     const panel = document.getElementById('meeting-panel');
     const titleEl = document.getElementById('meeting-panel-title');
+    const viewMode = document.getElementById('meeting-view-mode');
+    const formWrap = document.getElementById('form-meeting')?.closest('.form-capture');
     if (!panel) return;
+    currentMeetingData = null;
     if (id) {
-        titleEl.textContent = 'Edit meeting (MOM)';
+        titleEl.textContent = 'Meeting details';
         fetch(API + '/meetings/' + id, { credentials: 'include' })
             .then(res => res.ok ? res.json() : null)
             .then(m => {
                 if (m) {
-                    document.getElementById('meeting-id').value = m.id;
-                    document.getElementById('meeting-type').value = m.meetingType || 'weekly';
-                    document.getElementById('meeting-date').value = m.meetingDate || '';
-                    document.getElementById('meeting-attendees').value = m.attendees || '';
-                    document.getElementById('meeting-agenda').value = m.agenda || '';
-                    document.getElementById('meeting-summary').value = m.summary || '';
-                    document.getElementById('meeting-decisions').value = (m.decisions || []).join('\n');
-                    document.getElementById('meeting-action-items').value = (m.actionItems || []).map(a =>
-                        [a.actionText, a.owner || '', a.dueDate || '', a.status || 'open'].join(' | ')
-                    ).join('\n');
-                    document.getElementById('meeting-requirement-ids').value = (m.requirementIds || []).join(', ');
+                    currentMeetingData = m;
+                    populateMeetingForm(m);
+                    showMeetingViewMode(m);
                 }
             });
     } else {
@@ -1252,6 +1353,9 @@ function openMeetingPanel(id) {
         document.getElementById('form-meeting').reset();
         document.getElementById('meeting-id').value = '';
         document.getElementById('meeting-type').value = document.getElementById('meetings-type')?.value || 'weekly';
+        if (viewMode) viewMode.classList.add('hidden');
+        document.getElementById('form-meeting')?.classList.remove('hidden');
+        document.getElementById('meeting-form-delete')?.classList.add('hidden');
     }
     hideMessage('meeting-message');
     panel.classList.remove('hidden');
@@ -1275,11 +1379,20 @@ function parseActionItems(text) {
     }).filter(a => a.actionText);
 }
 
+async function deleteMeeting(id) {
+    if (!(currentUser && currentUser.role === 'ADMIN') || !confirm('Delete this meeting?')) return;
+    try {
+        const res = await fetch(API + '/meetings/' + id, { method: 'DELETE', credentials: 'include' });
+        if (res.ok || res.status === 204) { closeMeetingPanel(); renderMeetingsList(); }
+    } catch (e) { /* ignore */ }
+}
+
 async function renderMeetingsList() {
     const container = document.getElementById('meetings-list');
     const typeEl = document.getElementById('meetings-type');
     if (!container) return;
     const type = (typeEl && typeEl.value) || '';
+    const isAdmin = currentUser && currentUser.role === 'ADMIN';
     try {
         const url = type ? API + '/meetings?type=' + encodeURIComponent(type) : API + '/meetings';
         const res = await fetch(url, { credentials: 'include' });
@@ -1288,14 +1401,19 @@ async function renderMeetingsList() {
         container.innerHTML = list.map(m => {
             const name = (m.meetingType || 'Meeting') + ' — ' + (m.meetingDate || '');
             const preview = (m.summary || m.agenda || '').slice(0, 100);
+            const deleteBtn = isAdmin ? `<button type="button" class="meeting-card-delete btn-close" data-meeting-id="${m.id}" aria-label="Delete meeting" title="Delete (Admin only)">×</button>` : '';
             return `<div class="meeting-card meeting-card-clickable" data-meeting-id="${m.id}">
+                ${deleteBtn}
                 <h3>${escapeHtml(name)}</h3>
                 <p class="hint">${escapeHtml(preview)}${preview.length >= 100 ? '…' : ''}</p>
                 <span class="hint">Click to view or update MOM</span>
             </div>`;
         }).join('') || '<p>No meetings yet. Click &quot;New meeting&quot; to add one.</p>';
         container.querySelectorAll('.meeting-card-clickable').forEach(card => {
-            card.addEventListener('click', () => openMeetingPanel(Number(card.getAttribute('data-meeting-id'))));
+            card.addEventListener('click', (e) => { if (!e.target.closest('.meeting-card-delete')) openMeetingPanel(Number(card.getAttribute('data-meeting-id'))); });
+        });
+        container.querySelectorAll('.meeting-card-delete').forEach(btn => {
+            btn.addEventListener('click', (e) => { e.stopPropagation(); deleteMeeting(Number(btn.getAttribute('data-meeting-id'))); });
         });
     } catch (e) {
         container.innerHTML = '<p>Failed to load.</p>';
@@ -1307,9 +1425,17 @@ async function renderMeetingsList() {
     const btnClose = document.getElementById('meeting-panel-close');
     const btnCancel = document.getElementById('meeting-panel-cancel');
     const form = document.getElementById('form-meeting');
+    const btnViewEdit = document.getElementById('meeting-view-edit');
+    const btnViewClose = document.getElementById('meeting-view-close');
+    const btnDelete = document.getElementById('meeting-delete-btn');
+    const btnFormDelete = document.getElementById('meeting-form-delete');
     if (btnNew) btnNew.addEventListener('click', () => openMeetingPanel(null));
     if (btnClose) btnClose.addEventListener('click', closeMeetingPanel);
     if (btnCancel) btnCancel.addEventListener('click', closeMeetingPanel);
+    if (btnViewEdit) btnViewEdit.addEventListener('click', () => { showMeetingEditMode(); document.getElementById('meeting-panel-title').textContent = 'Edit meeting (MOM)'; });
+    if (btnViewClose) btnViewClose.addEventListener('click', closeMeetingPanel);
+    if (btnDelete) btnDelete.addEventListener('click', () => { const id = btnDelete.dataset.meetingId; if (id) deleteMeeting(Number(id)); });
+    if (btnFormDelete) btnFormDelete.addEventListener('click', () => { const id = btnFormDelete.dataset.meetingId; if (id) deleteMeeting(Number(id)); });
     if (form) form.addEventListener('submit', async e => {
         e.preventDefault();
         const id = document.getElementById('meeting-id').value;

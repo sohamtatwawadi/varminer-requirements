@@ -66,11 +66,17 @@ public class PrioritySetService {
             for (int i = 0; i < dto.getItems().size(); i++) {
                 final int order = i;
                 PrioritySetItemDto it = dto.getItems().get(i);
-                requirementRepository.findByExternalId(it.getRequirementId() != null ? it.getRequirementId().trim() : "").ifPresent(req -> {
+                String extId = it.getRequirementId() != null ? it.getRequirementId().trim() : null;
+                if (extId == null || extId.isEmpty()) continue;
+                requirementRepository.findByExternalId(extId).ifPresent(req -> {
                     PrioritySetItemEntity item = new PrioritySetItemEntity();
                     item.setPrioritySet(saved);
                     item.setRequirement(req);
                     item.setSortOrder(it.getSortOrder() != null ? it.getSortOrder() : order);
+                    item.setStartSprint(it.getStartSprint());
+                    item.setEndSprint(it.getEndSprint());
+                    item.setAssignee(it.getAssignee());
+                    item.setReleaseDate(it.getReleaseDate());
                     saved.getItems().add(item);
                 });
             }
@@ -100,6 +106,10 @@ public class PrioritySetService {
                         item.setPrioritySet(saved);
                         item.setRequirement(req);
                         item.setSortOrder(it.getSortOrder() != null ? it.getSortOrder() : order);
+                        item.setStartSprint(it.getStartSprint());
+                        item.setEndSprint(it.getEndSprint());
+                        item.setAssignee(it.getAssignee());
+                        item.setReleaseDate(it.getReleaseDate());
                         saved.getItems().add(item);
                     });
                 }
@@ -128,6 +138,10 @@ public class PrioritySetService {
             idto.setId(item.getId());
             idto.setRequirementId(item.getRequirement().getExternalId());
             idto.setSortOrder(item.getSortOrder());
+            idto.setStartSprint(item.getStartSprint());
+            idto.setEndSprint(item.getEndSprint());
+            idto.setAssignee(item.getAssignee());
+            idto.setReleaseDate(item.getReleaseDate());
             idto.setRequirement(requirementMapper.toDto(item.getRequirement()));
             return idto;
         }).collect(Collectors.toList()));
