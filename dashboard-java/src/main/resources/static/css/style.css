@@ -1033,7 +1033,7 @@ body {
 .priority-set-modal {
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
-    padding: 0;
+    padding: 24px;
     overflow: hidden;
 }
 /* When open: larger centered modal popup */
@@ -1051,7 +1051,8 @@ body {
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
 }
 .priority-set-modal .detail-header.priority-set-modal-header {
-    padding: 16px 24px;
+    padding: 16px 0;
+    margin-bottom: 16px;
     border-bottom: 1px solid var(--border);
     background: #fff;
 }
