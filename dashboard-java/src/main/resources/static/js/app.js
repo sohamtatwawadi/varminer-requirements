@@ -1289,10 +1289,17 @@ function openPrioritySetPanel(id) {
         prioritySetItemsTableAddRow(null);
     }
     panel.classList.remove('hidden');
+    panel.classList.add('priority-set-modal-open');
+    const overlay = document.getElementById('priority-set-overlay');
+    if (overlay) { overlay.classList.remove('hidden'); overlay.setAttribute('aria-hidden', 'false'); }
 }
 
 function closePrioritySetPanel() {
-    document.getElementById('priority-set-panel').classList.add('hidden');
+    const panel = document.getElementById('priority-set-panel');
+    const overlay = document.getElementById('priority-set-overlay');
+    if (panel) panel.classList.add('hidden');
+    if (panel) panel.classList.remove('priority-set-modal-open');
+    if (overlay) { overlay.classList.add('hidden'); overlay.setAttribute('aria-hidden', 'true'); }
     renderPriorities();
 }
 
@@ -1310,6 +1317,7 @@ function closePrioritySetPanel() {
     const form = document.getElementById('form-priority-set');
     if (btnNew) btnNew.addEventListener('click', () => openPrioritySetPanel(null));
     if (btnClose) btnClose.addEventListener('click', closePrioritySetPanel);
+    document.getElementById('priority-set-overlay')?.addEventListener('click', closePrioritySetPanel);
     document.getElementById('priority-set-view-close')?.addEventListener('click', closePrioritySetPanel);
     document.getElementById('priority-set-view-edit')?.addEventListener('click', () => {
         if (currentPrioritySetData) showPrioritySetEditMode(currentPrioritySetData);

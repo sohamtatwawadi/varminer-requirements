@@ -1018,11 +1018,37 @@ body {
 .priorities-empty { color: var(--text-muted); padding: 2rem; text-align: center; }
 
 /* Priority set modal — executive view/edit */
+/* Overlay when priority set panel is open */
+.priority-set-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 200;
+    cursor: pointer;
+}
+.priority-set-overlay.hidden {
+    display: none;
+}
+
 .priority-set-modal {
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
     padding: 0;
     overflow: hidden;
+}
+/* When open: larger centered modal popup */
+.priority-set-modal.priority-set-modal-open {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 92vw;
+    max-width: 1100px;
+    max-height: 88vh;
+    margin: 0;
+    overflow-y: auto;
+    z-index: 201;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
 }
 .priority-set-modal .detail-header.priority-set-modal-header {
     padding: 16px 24px;
