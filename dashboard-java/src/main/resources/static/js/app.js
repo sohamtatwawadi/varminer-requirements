@@ -1036,6 +1036,14 @@ function getPrioritiesTimeframe() {
     return (active && active.getAttribute('data-timeframe')) || 'week';
 }
 
+function formatPriorityDate(dateStr) {
+    if (!dateStr || !String(dateStr).trim()) return '—';
+    const d = new Date(dateStr + 'T12:00:00');
+    if (isNaN(d.getTime())) return dateStr;
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
+}
+
 async function renderPriorities() {
     currentPrioritiesTimeframe = getPrioritiesTimeframe();
     const container = document.getElementById('priorities-list');
@@ -1045,15 +1053,43 @@ async function renderPriorities() {
         const res = await fetch(url, { credentials: 'include' });
         if (!res.ok) { container.innerHTML = '<p>Failed to load.</p>'; return; }
         const list = await res.json();
-        container.innerHTML = list.map(ps => `
-            <div class="priority-set-card priority-set-card-clickable" data-priority-set-id="${ps.id}">
-                <h3>${escapeHtml(ps.name || '')}</h3>
-                <p class="hint">${escapeHtml(ps.timeframe || '')} — ${(ps.items || []).length} tagged backlog items</p>
-                ${(ps.items || []).length ? '<p style="font-size:0.85rem;margin:0.25rem 0 0;">' + (ps.items || []).map(i => escapeHtml(i.requirementId || '')).join(', ') + '</p>' : ''}
-            </div>
-        `).join('') || '<p>No priority sets for this tab. Click &quot;New priority set&quot; to create one.</p>';
-        container.querySelectorAll('.priority-set-card-clickable').forEach(card => {
-            card.addEventListener('click', () => openPrioritySetPanel(Number(card.getAttribute('data-priority-set-id'))));
+        const pencilSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>';
+        container.innerHTML = list.map(ps => {
+            const timeframeLabel = (ps.timeframe || '').replace(/\b\w/g, c => c.toUpperCase());
+            const dateRange = [formatPriorityDate(ps.startDate), formatPriorityDate(ps.endDate)].filter(Boolean).join(' – ') || '—';
+            const items = ps.items || [];
+            const rows = items.length ? items.map(i => {
+                const req = (i.requirementText || (i.requirement && i.requirement.requirement) || '—').toString().slice(0, 80);
+                const id = escapeHtml(i.requirementId || '—');
+                const start = escapeHtml(i.startSprint || '—');
+                const end = escapeHtml(i.endSprint || '—');
+                const rel = formatPriorityDate(i.releaseDate);
+                const assignee = escapeHtml(i.assignee || '—');
+                return `<tr><td>${escapeHtml(req)}${req.length >= 80 ? '…' : ''}</td><td>${id}</td><td>${start}</td><td>${end}</td><td>${rel}</td><td>${assignee}</td></tr>`;
+            }).join('') : '<tr><td colspan="6" class="text-muted">No items</td></tr>';
+            return `
+            <div class="priority-set-block card" data-priority-set-id="${ps.id}">
+                <div class="priority-set-block-header">
+                    <div class="priority-set-block-title-row">
+                        <h3 class="priority-set-block-name">${escapeHtml(ps.name || 'Unnamed')}</h3>
+                        <button type="button" class="btn-edit-priority btn-edit" data-priority-set-id="${ps.id}" title="Edit priority set" aria-label="Edit">${pencilSvg}</button>
+                    </div>
+                    <div class="priority-set-block-meta">
+                        <span class="priority-set-meta-badge">${escapeHtml(timeframeLabel)}</span>
+                        <span class="priority-set-meta-dates">${dateRange}</span>
+                        <span class="priority-set-meta-count">${items.length} item${items.length !== 1 ? 's' : ''}</span>
+                    </div>
+                </div>
+                <div class="priority-set-block-table-wrap">
+                    <table class="priority-set-view-table">
+                        <thead><tr><th>Requirement</th><th>Requirement ID</th><th>Start sprint</th><th>End sprint</th><th>Release date</th><th>Assignee</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            </div>`;
+        }).join('') || '<p class="priorities-empty">No priority sets for this tab. Click &quot;New priority set&quot; to create one.</p>';
+        container.querySelectorAll('.btn-edit-priority').forEach(btn => {
+            btn.addEventListener('click', (e) => { e.stopPropagation(); openPrioritySetPanel(Number(btn.getAttribute('data-priority-set-id'))); });
         });
     } catch (e) {
         container.innerHTML = '<p>Failed to load.</p>';
@@ -1066,12 +1102,12 @@ function prioritySetItemsTableAddRow(row) {
     const reqText = (row && row.requirement && typeof row.requirement === 'object' && row.requirement.requirement) ? row.requirement.requirement : ((row && row.requirementText) || '');
     const tr = document.createElement('tr');
     tr.innerHTML = `
+        <td><input type="text" class="priority-item-requirement-text" placeholder="Write requirement" value="${escapeHtml(reqText)}"></td>
         <td><input type="text" class="priority-item-id" placeholder="Optional, e.g. VR-001" value="${escapeHtml((row && row.requirementId) || '')}"></td>
-        <td><input type="text" class="priority-item-requirement-text" placeholder="Write requirement or link by ID above" value="${escapeHtml(reqText)}"></td>
         <td><input type="text" class="priority-item-start-sprint" placeholder="Sprint 1" value="${escapeHtml((row && row.startSprint) || '')}"></td>
         <td><input type="text" class="priority-item-end-sprint" placeholder="Sprint 2" value="${escapeHtml((row && row.endSprint) || '')}"></td>
-        <td><input type="text" class="priority-item-assignee" placeholder="Name" value="${escapeHtml((row && row.assignee) || '')}"></td>
         <td><input type="date" class="priority-item-release-date" value="${(row && row.releaseDate) || ''}"></td>
+        <td><input type="text" class="priority-item-assignee" placeholder="Assignee" value="${escapeHtml((row && row.assignee) || '')}"></td>
         <td><button type="button" class="btn-remove-row" aria-label="Remove">×</button></td>
     `;
     tr.querySelector('.btn-remove-row')?.addEventListener('click', () => tr.remove());
@@ -1165,17 +1201,17 @@ function closePrioritySetPanel() {
         const rows = document.querySelectorAll('#priority-set-items-tbody tr');
         const items = [];
         rows.forEach((tr, i) => {
-            const rid = (tr.querySelector('.priority-item-id')?.value || '').trim();
             const reqText = (tr.querySelector('.priority-item-requirement-text')?.value || '').trim();
+            const rid = (tr.querySelector('.priority-item-id')?.value || '').trim();
             if (!rid && !reqText) return;
             items.push({
-                requirementId: rid || null,
                 requirementText: reqText || null,
+                requirementId: rid || null,
                 sortOrder: i,
                 startSprint: (tr.querySelector('.priority-item-start-sprint')?.value || '').trim() || null,
                 endSprint: (tr.querySelector('.priority-item-end-sprint')?.value || '').trim() || null,
-                assignee: (tr.querySelector('.priority-item-assignee')?.value || '').trim() || null,
-                releaseDate: (tr.querySelector('.priority-item-release-date')?.value || '') || null
+                releaseDate: (tr.querySelector('.priority-item-release-date')?.value || '') || null,
+                assignee: (tr.querySelector('.priority-item-assignee')?.value || '').trim() || null
             });
         });
         if (!name) { showMessage('priority-set-message', 'Name is required.', 'error'); return; }

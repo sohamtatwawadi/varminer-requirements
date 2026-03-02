@@ -14,7 +14,7 @@
 <body>
     <div class="app">
         <aside class="sidebar" id="sidebar">
-            <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Collapse sidebar" title="Collapse sidebar"></button>
+            <button type="button" class="sidebar-toggle" id="sidebar-toggle" aria-label="Collapse sidebar" title="Collapse sidebar"><span class="sidebar-toggle-icon" aria-hidden="true">◀</span></button>
             <div class="sidebar-brand">
                 <span class="brand-icon">◈</span>
                 <span class="brand-text">VarMiner</span>
@@ -478,18 +478,18 @@
                             </div>
                         </div>
                         <div class="form-row">
-                            <label>Priority items (optional)</label>
-                            <p class="hint">Use IDs from the Product backlog. Order = priority order. Add rows and fill start/end sprint, assignee, release date per item.</p>
+                            <label>Priority items</label>
+                            <p class="hint">Add rows: write the Requirement (or link via Requirement ID from Product backlog). Fill Start/End sprint, Release date, Assignee. Order = priority order.</p>
                             <div class="table-wrap" style="margin-top: 0.5rem;">
                                 <table class="backlog-table" id="priority-set-items-table">
                                     <thead>
                                         <tr>
-                                            <th>Requirement ID (optional)</th>
                                             <th>Requirement</th>
+                                            <th>Requirement ID (optional)</th>
                                             <th>Start sprint</th>
                                             <th>End sprint</th>
-                                            <th>Assignee</th>
                                             <th>Release date</th>
+                                            <th>Assignee</th>
                                             <th></th>
                                         </tr>
                                     </thead>
