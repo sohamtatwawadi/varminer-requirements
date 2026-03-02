@@ -1265,6 +1265,30 @@ body {
 .priority-set-items-table th,
 .priority-set-items-table td {
     padding: 8px 12px;
+    vertical-align: top;
+}
+.priority-set-items-table .td-requirement {
+    min-width: 280px;
+    width: 35%;
+}
+.priority-set-items-table .priority-item-requirement-text {
+    display: block;
+    width: 100%;
+    min-width: 260px;
+    min-height: 72px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    resize: vertical;
+    box-sizing: border-box;
+}
+.priority-set-items-table .priority-item-requirement-text:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 .priority-set-items-table thead th {
     background: #f8f9fb;

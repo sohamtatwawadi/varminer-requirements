@@ -1119,7 +1119,7 @@ function prioritySetItemsTableAddRow(row) {
     const reqText = (row && row.requirement && typeof row.requirement === 'object' && row.requirement.requirement) ? row.requirement.requirement : ((row && row.requirementText) || '');
     const tr = document.createElement('tr');
     tr.innerHTML = `
-        <td><input type="text" class="priority-item-requirement-text" placeholder="Write requirement" value="${escapeHtml(reqText)}"></td>
+        <td class="td-requirement"><textarea class="priority-item-requirement-text" placeholder="Write requirement" rows="3">${escapeHtml(reqText)}</textarea></td>
         <td><input type="text" class="priority-item-id" placeholder="Optional, e.g. VR-001" value="${escapeHtml((row && row.requirementId) || '')}"></td>
         <td><input type="text" class="priority-item-start-sprint" placeholder="Sprint 1" value="${escapeHtml((row && row.startSprint) || '')}"></td>
         <td><input type="text" class="priority-item-end-sprint" placeholder="Sprint 2" value="${escapeHtml((row && row.endSprint) || '')}"></td>
@@ -1327,7 +1327,7 @@ function closePrioritySetPanel() {
         const rows = document.querySelectorAll('#priority-set-items-tbody tr');
         const items = [];
         rows.forEach((tr, i) => {
-            const reqText = (tr.querySelector('.priority-item-requirement-text')?.value || '').trim();
+            const reqText = (tr.querySelector('.priority-item-requirement-text')?.value ?? '').trim();
             const rid = (tr.querySelector('.priority-item-id')?.value || '').trim();
             if (!rid && !reqText) return;
             items.push({
