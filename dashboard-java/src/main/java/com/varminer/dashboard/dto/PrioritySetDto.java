@@ -1,5 +1,6 @@
 package com.varminer.dashboard.dto;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ public class PrioritySetDto {
     private String timeframe;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Instant updatedAt;
     private List<PrioritySetItemDto> items = new ArrayList<>();
 
     public Long getId() { return id; }
@@ -22,6 +24,8 @@ public class PrioritySetDto {
     public void setStartDate(LocalDate startDate) { this.startDate = startDate; }
     public LocalDate getEndDate() { return endDate; }
     public void setEndDate(LocalDate endDate) { this.endDate = endDate; }
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
     public List<PrioritySetItemDto> getItems() { return items; }
     public void setItems(List<PrioritySetItemDto> items) { this.items = items; }
 }

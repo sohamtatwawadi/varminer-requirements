@@ -446,13 +446,57 @@
                 <div class="toolbar" style="margin-top: 1rem;">
                     <button type="button" class="btn btn-primary" id="priorities-new-set">New priority set</button>
                 </div>
-                <!-- Priority set create/edit panel (above KPIs and charts) -->
-                <div class="detail-panel hidden card" id="priority-set-panel" style="margin-top: 1rem; margin-bottom: 1rem;">
-                    <div class="detail-header">
+                <!-- Priority set modal: view (default) + edit mode -->
+                <div class="detail-panel hidden card priority-set-modal" id="priority-set-panel">
+                    <div class="detail-header priority-set-modal-header">
                         <h3 id="priority-set-panel-title">New priority set</h3>
                         <button type="button" class="btn-close" id="priority-set-panel-close" aria-label="Close">×</button>
                     </div>
-                    <form id="form-priority-set" class="form-capture form-detail">
+                    <!-- VIEW MODE: summary + read-only table -->
+                    <div id="priority-set-view-mode" class="priority-set-view-mode hidden">
+                        <div class="priority-set-summary">
+                            <div class="priority-set-summary-row">
+                                <span class="priority-set-summary-label">Priority set</span>
+                                <span class="priority-set-summary-value" id="ps-view-name">—</span>
+                            </div>
+                            <div class="priority-set-summary-grid">
+                                <div class="priority-set-summary-item">
+                                    <span class="priority-set-summary-label">Timeframe</span>
+                                    <span class="priority-set-summary-value" id="ps-view-timeframe">—</span>
+                                </div>
+                                <div class="priority-set-summary-item">
+                                    <span class="priority-set-summary-label">Total items</span>
+                                    <span class="priority-set-summary-value" id="ps-view-total">—</span>
+                                </div>
+                                <div class="priority-set-summary-item">
+                                    <span class="priority-set-summary-label">Owner</span>
+                                    <span class="priority-set-summary-value" id="ps-view-owner">—</span>
+                                </div>
+                                <div class="priority-set-summary-item">
+                                    <span class="priority-set-summary-label">Last updated</span>
+                                    <span class="priority-set-summary-value" id="ps-view-updated">—</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="priority-set-table-card">
+                            <div class="priority-set-table-card-header">Priority order</div>
+                            <div class="priority-set-table-wrap">
+                                <table class="priority-set-modal-table" id="priority-set-view-table">
+                                    <thead><tr><th>Requirement</th><th>Requirement ID</th><th>Start sprint</th><th>End sprint</th><th>Release date</th><th>Assignee</th></tr></thead>
+                                    <tbody id="priority-set-view-tbody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="priority-set-view-actions">
+                            <button type="button" class="btn btn-primary" id="priority-set-view-edit">Edit</button>
+                            <button type="button" class="btn btn-secondary" id="priority-set-view-close">Close</button>
+                            <div class="priority-set-danger-link-wrap">
+                                <button type="button" class="btn-link-danger hidden" id="priority-set-delete" data-priority-set-id="">Delete priority set</button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- EDIT MODE: form -->
+                    <form id="form-priority-set" class="form-capture form-detail priority-set-edit-form">
                         <input type="hidden" id="priority-set-id" />
                         <div class="form-row">
                             <label>Name <span class="req">*</span></label>
@@ -479,9 +523,9 @@
                         </div>
                         <div class="form-row">
                             <label>Priority items</label>
-                            <p class="hint">Add rows: write the Requirement (or link via Requirement ID from Product backlog). Fill Start/End sprint, Release date, Assignee. Order = priority order.</p>
-                            <div class="table-wrap" style="margin-top: 0.5rem;">
-                                <table class="backlog-table" id="priority-set-items-table">
+                            <p class="hint">Order = priority. Add rows: Requirement, Requirement ID (optional), Start/End sprint, Release date, Assignee.</p>
+                            <div class="table-wrap priority-set-edit-table-wrap">
+                                <table class="backlog-table priority-set-items-table" id="priority-set-items-table">
                                     <thead>
                                         <tr>
                                             <th>Requirement</th>
@@ -496,12 +540,14 @@
                                     <tbody id="priority-set-items-tbody"></tbody>
                                 </table>
                             </div>
-                            <button type="button" class="btn btn-secondary" id="priority-set-add-item" style="margin-top: 0.5rem;">Add item</button>
+                            <button type="button" class="btn btn-secondary" id="priority-set-add-item">Add item</button>
                         </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">Save</button>
-                            <button type="button" class="btn btn-danger hidden" id="priority-set-delete">Delete priority set</button>
+                        <div class="form-actions priority-set-edit-actions">
+                            <button type="submit" class="btn btn-primary" id="priority-set-save-btn">Save changes</button>
                             <button type="button" class="btn btn-secondary" id="priority-set-panel-cancel">Cancel</button>
+                        </div>
+                        <div class="priority-set-edit-danger">
+                            <button type="button" class="btn-link-danger hidden" id="priority-set-delete-edit" data-priority-set-id="">Delete priority set</button>
                         </div>
                     </form>
                     <div id="priority-set-message" class="message hidden"></div>

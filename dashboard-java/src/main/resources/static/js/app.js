@@ -1044,6 +1044,23 @@ function formatPriorityDate(dateStr) {
     return d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear();
 }
 
+function getReleaseDateContext(dateStr) {
+    if (!dateStr || !String(dateStr).trim()) return '';
+    const d = new Date(dateStr + 'T12:00:00');
+    if (isNaN(d.getTime())) return '';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    d.setHours(0, 0, 0, 0);
+    if (d.getTime() < today.getTime()) return 'overdue';
+    if (d.getTime() > today.getTime()) return 'upcoming';
+    return 'completed';
+}
+
+function assigneeInitial(name) {
+    if (!name || !String(name).trim()) return '?';
+    return String(name).trim().charAt(0).toUpperCase();
+}
+
 async function renderPriorities() {
     currentPrioritiesTimeframe = getPrioritiesTimeframe();
     const container = document.getElementById('priorities-list');
@@ -1114,46 +1131,135 @@ function prioritySetItemsTableAddRow(row) {
     tbody.appendChild(tr);
 }
 
+let currentPrioritySetData = null;
+
+function showPrioritySetViewMode(ps) {
+    currentPrioritySetData = ps;
+    const viewMode = document.getElementById('priority-set-view-mode');
+    const form = document.getElementById('form-priority-set');
+    if (!viewMode || !form) return;
+    viewMode.classList.remove('hidden');
+    form.classList.add('hidden');
+    document.getElementById('priority-set-panel-title').textContent = ps.name || 'Priority set';
+    document.getElementById('ps-view-name').textContent = ps.name || '—';
+    const timeframeLabel = (ps.timeframe || '').replace(/\b\w/g, c => c.toUpperCase());
+    document.getElementById('ps-view-timeframe').textContent = timeframeLabel || '—';
+    const items = ps.items || [];
+    document.getElementById('ps-view-total').textContent = String(items.length);
+    document.getElementById('ps-view-owner').textContent = '—';
+    document.getElementById('ps-view-updated').textContent = ps.updatedAt ? formatPriorityDate(ps.updatedAt.split('T')[0]) : '—';
+    const viewTbody = document.getElementById('priority-set-view-tbody');
+    if (viewTbody) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        viewTbody.innerHTML = items.length ? items.map((i, idx) => {
+            const req = (i.requirementText || (i.requirement && i.requirement.requirement) || '—').toString();
+            const reqShort = req.length > 80 ? req.slice(0, 80) + '…' : req;
+            const reqId = escapeHtml(i.requirementId || '—');
+            const startSprint = (i.startSprint || '').trim();
+            const endSprint = (i.endSprint || '').trim();
+            const relDate = i.releaseDate ? formatPriorityDate(i.releaseDate) : '—';
+            const relContext = getReleaseDateContext(i.releaseDate);
+            const assignee = (i.assignee || '').trim();
+            const priorityRowClass = idx === 0 ? 'priority-row-1' : idx === 1 ? 'priority-row-2' : idx === 2 ? 'priority-row-3' : 'priority-row-other';
+            const startPill = startSprint ? `<span class="pill pill-sprint">${escapeHtml(startSprint)}</span>` : '—';
+            const endPill = endSprint ? `<span class="pill pill-sprint">${escapeHtml(endSprint)}</span>` : '—';
+            const releaseCell = relContext ? `<span class="release-date-badge release-date-${relContext}">${escapeHtml(relDate)}</span>` : escapeHtml(relDate);
+            const assigneeCell = assignee
+                ? `<span class="assignee-cell"><span class="assignee-avatar" aria-hidden="true">${escapeHtml(assigneeInitial(assignee))}</span><span class="assignee-name">${escapeHtml(assignee)}</span></span>`
+                : '—';
+            return `<tr class="priority-modal-row ${priorityRowClass}"><td>${escapeHtml(reqShort)}</td><td>${reqId}</td><td>${startPill}</td><td>${endPill}</td><td>${releaseCell}</td><td>${assigneeCell}</td></tr>`;
+        }).join('') : '<tr><td colspan="6" class="priority-set-empty-cell">No items</td></tr>';
+    }
+    const btnDeleteView = document.getElementById('priority-set-delete');
+    if (btnDeleteView) {
+        btnDeleteView.dataset.prioritySetId = String(ps.id || '');
+        btnDeleteView.classList.toggle('hidden', !ps.id);
+    }
+}
+
+function showPrioritySetEditMode(ps) {
+    currentPrioritySetData = ps;
+    const viewMode = document.getElementById('priority-set-view-mode');
+    const form = document.getElementById('form-priority-set');
+    if (!viewMode || !form) return;
+    viewMode.classList.add('hidden');
+    form.classList.remove('hidden');
+    document.getElementById('priority-set-panel-title').textContent = ps && ps.id ? 'Edit priority set' : 'New priority set';
+    document.getElementById('priority-set-id').value = ps ? (ps.id || '') : '';
+    document.getElementById('priority-set-name').value = (ps && ps.name) || '';
+    document.getElementById('priority-set-timeframe').value = (ps && ps.timeframe) || currentPrioritiesTimeframe;
+    document.getElementById('priority-set-start-date').value = (ps && ps.startDate) || '';
+    document.getElementById('priority-set-end-date').value = (ps && ps.endDate) || '';
+    const tbody = document.getElementById('priority-set-items-tbody');
+    if (tbody) {
+        tbody.innerHTML = '';
+        (ps && ps.items && ps.items.length ? ps.items : [null]).forEach(i => {
+            prioritySetItemsTableAddRow(i ? {
+                requirementId: i.requirementId,
+                requirement: i.requirement,
+                requirementText: (i.requirement && i.requirement.requirement) || i.requirementText,
+                startSprint: i.startSprint,
+                endSprint: i.endSprint,
+                assignee: i.assignee,
+                releaseDate: i.releaseDate
+            } : null);
+        });
+    }
+    const btnDeleteEdit = document.getElementById('priority-set-delete-edit');
+    if (btnDeleteEdit) {
+        btnDeleteEdit.dataset.prioritySetId = String(ps && ps.id || '');
+        btnDeleteEdit.classList.toggle('hidden', !(ps && ps.id));
+    }
+}
+
 function openPrioritySetPanel(id) {
     const panel = document.getElementById('priority-set-panel');
     const titleEl = document.getElementById('priority-set-panel-title');
-    const btnDelete = document.getElementById('priority-set-delete');
+    const viewMode = document.getElementById('priority-set-view-mode');
+    const form = document.getElementById('form-priority-set');
     const tbody = document.getElementById('priority-set-items-tbody');
     if (!panel) return;
     if (tbody) tbody.innerHTML = '';
+    hideMessage('priority-set-message');
     if (id) {
-        titleEl.textContent = 'Edit priority set';
-        if (btnDelete) { btnDelete.classList.remove('hidden'); btnDelete.dataset.prioritySetId = String(id); }
+        viewMode.classList.remove('hidden');
+        form.classList.add('hidden');
+        titleEl.textContent = 'Loading…';
+        document.getElementById('ps-view-name').textContent = '—';
+        document.getElementById('ps-view-timeframe').textContent = '—';
+        document.getElementById('ps-view-total').textContent = '—';
+        document.getElementById('ps-view-owner').textContent = '—';
+        document.getElementById('ps-view-updated').textContent = '—';
+        const viewTbody = document.getElementById('priority-set-view-tbody');
+        if (viewTbody) viewTbody.innerHTML = '<tr><td colspan="6" class="priority-set-empty-cell">Loading…</td></tr>';
+        document.getElementById('priority-set-delete').classList.add('hidden');
         fetch(API + '/priority-sets/' + id, { credentials: 'include' })
             .then(res => res.ok ? res.json() : null)
             .then(ps => {
-                if (ps) {
-                    document.getElementById('priority-set-id').value = ps.id;
-                    document.getElementById('priority-set-name').value = ps.name || '';
-                    document.getElementById('priority-set-timeframe').value = ps.timeframe || 'week';
-                    document.getElementById('priority-set-start-date').value = ps.startDate || '';
-                    document.getElementById('priority-set-end-date').value = ps.endDate || '';
-                    (ps.items || []).forEach(i => prioritySetItemsTableAddRow({
-                        requirementId: i.requirementId || (i.requirement && i.requirement.id),
-                        requirement: i.requirement,
-                        requirementText: (i.requirement && i.requirement.requirement) || '',
-                        startSprint: i.startSprint,
-                        endSprint: i.endSprint,
-                        assignee: i.assignee,
-                        releaseDate: i.releaseDate
-                    }));
-                    if (!(ps.items && ps.items.length)) prioritySetItemsTableAddRow(null);
+                if (ps) showPrioritySetViewMode(ps);
+                else {
+                    viewMode.classList.add('hidden');
+                    form.classList.remove('hidden');
+                    showPrioritySetEditMode({ id });
                 }
+            })
+            .catch(() => {
+                viewMode.classList.add('hidden');
+                form.classList.remove('hidden');
+                showPrioritySetEditMode({ id });
             });
     } else {
+        viewMode.classList.add('hidden');
+        form.classList.remove('hidden');
+        currentPrioritySetData = null;
         titleEl.textContent = 'New priority set';
         document.getElementById('form-priority-set').reset();
         document.getElementById('priority-set-id').value = '';
         document.getElementById('priority-set-timeframe').value = currentPrioritiesTimeframe;
-        if (btnDelete) btnDelete.classList.add('hidden');
+        document.getElementById('priority-set-delete-edit').classList.add('hidden');
         prioritySetItemsTableAddRow(null);
     }
-    hideMessage('priority-set-message');
     panel.classList.remove('hidden');
 }
 
@@ -1176,21 +1282,41 @@ function closePrioritySetPanel() {
     const form = document.getElementById('form-priority-set');
     if (btnNew) btnNew.addEventListener('click', () => openPrioritySetPanel(null));
     if (btnClose) btnClose.addEventListener('click', closePrioritySetPanel);
-    if (btnCancel) btnCancel.addEventListener('click', closePrioritySetPanel);
-    const btnAddItem = document.getElementById('priority-set-add-item');
-    const btnDelete = document.getElementById('priority-set-delete');
-    if (btnAddItem) btnAddItem.addEventListener('click', () => prioritySetItemsTableAddRow(null));
-    if (btnDelete) btnDelete.addEventListener('click', async () => {
-        const setId = btnDelete.dataset.prioritySetId;
-        if (!setId || !confirm('Delete this priority set?')) return;
-        try {
-            const res = await fetch(API + '/priority-sets/' + setId, { method: 'DELETE', credentials: 'include' });
-            if (res.ok || res.status === 204) { closePrioritySetPanel(); renderPriorities(); }
-            else showMessage('priority-set-message', 'Delete failed.', 'error');
-        } catch (err) {
-            showMessage('priority-set-message', err.message || 'Delete failed.', 'error');
+    document.getElementById('priority-set-view-close')?.addEventListener('click', closePrioritySetPanel);
+    document.getElementById('priority-set-view-edit')?.addEventListener('click', () => {
+        if (currentPrioritySetData) showPrioritySetEditMode(currentPrioritySetData);
+    });
+    if (btnCancel) btnCancel.addEventListener('click', () => {
+        if (currentPrioritySetData && currentPrioritySetData.id) {
+            showPrioritySetViewMode(currentPrioritySetData);
+        } else {
+            closePrioritySetPanel();
         }
     });
+    const btnAddItem = document.getElementById('priority-set-add-item');
+    function getPrioritySetDeleteId() {
+        const viewBtn = document.getElementById('priority-set-delete');
+        const editBtn = document.getElementById('priority-set-delete-edit');
+        if (viewBtn && !viewBtn.classList.contains('hidden')) return viewBtn.dataset.prioritySetId;
+        if (editBtn && !editBtn.classList.contains('hidden')) return editBtn.dataset.prioritySetId;
+        return document.getElementById('priority-set-id')?.value || '';
+    }
+    function handlePrioritySetDelete() {
+        const setId = getPrioritySetDeleteId();
+        if (!setId || !confirm('Delete this priority set?')) return;
+        (async () => {
+            try {
+                const res = await fetch(API + '/priority-sets/' + setId, { method: 'DELETE', credentials: 'include' });
+                if (res.ok || res.status === 204) { closePrioritySetPanel(); renderPriorities(); }
+                else showMessage('priority-set-message', 'Delete failed.', 'error');
+            } catch (err) {
+                showMessage('priority-set-message', err.message || 'Delete failed.', 'error');
+            }
+        })();
+    }
+    document.getElementById('priority-set-delete')?.addEventListener('click', handlePrioritySetDelete);
+    document.getElementById('priority-set-delete-edit')?.addEventListener('click', handlePrioritySetDelete);
+    if (btnAddItem) btnAddItem.addEventListener('click', () => prioritySetItemsTableAddRow(null));
     if (form) form.addEventListener('submit', async e => {
         e.preventDefault();
         const id = document.getElementById('priority-set-id').value;
@@ -1216,6 +1342,8 @@ function closePrioritySetPanel() {
         });
         if (!name) { showMessage('priority-set-message', 'Name is required.', 'error'); return; }
         hideMessage('priority-set-message');
+        const saveBtn = document.getElementById('priority-set-save-btn');
+        if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
         const body = { name, timeframe, startDate, endDate, items };
         try {
             const url = id ? API + '/priority-sets/' + id : API + '/priority-sets';
@@ -1223,10 +1351,17 @@ function closePrioritySetPanel() {
             const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify(body) });
             if (!res.ok) throw new Error(await res.text() || 'Save failed');
             showMessage('priority-set-message', 'Saved.', 'success');
-            if (!id) closePrioritySetPanel();
-            else renderPriorities();
+            if (!id) {
+                closePrioritySetPanel();
+            } else {
+                const updated = await fetch(API + '/priority-sets/' + id, { credentials: 'include' }).then(r => r.ok ? r.json() : null);
+                if (updated) showPrioritySetViewMode(updated);
+                else renderPriorities();
+            }
         } catch (err) {
             showMessage('priority-set-message', err.message || 'Failed to save.', 'error');
+        } finally {
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save changes'; }
         }
     });
 })();

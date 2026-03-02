@@ -13,6 +13,7 @@ import com.varminer.dashboard.repository.RequirementRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -142,6 +143,7 @@ public class PrioritySetService {
         dto.setTimeframe(e.getTimeframe());
         dto.setStartDate(e.getStartDate());
         dto.setEndDate(e.getEndDate());
+        dto.setUpdatedAt(e.getUpdatedAt());
         dto.setItems(e.getItems().stream().map(item -> {
             PrioritySetItemDto idto = new PrioritySetItemDto();
             idto.setId(item.getId());
