@@ -525,20 +525,18 @@
                             <label>Priority items</label>
                             <p class="hint">Order = priority. Add rows: Requirement, Requirement ID (optional), Start/End sprint, Release date, Assignee.</p>
                             <div class="table-wrap priority-set-edit-table-wrap">
-                                <table class="backlog-table priority-set-items-table" id="priority-set-items-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Requirement</th>
-                                            <th>Requirement ID (optional)</th>
-                                            <th>Start sprint</th>
-                                            <th>End sprint</th>
-                                            <th>Release date</th>
-                                            <th>Assignee</th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="priority-set-items-tbody"></tbody>
-                                </table>
+                                <div class="priority-items-container" id="priority-items-container">
+                                    <div class="priority-items-header">
+                                        <span class="priority-items-th">Requirement</span>
+                                        <span class="priority-items-th">Requirement ID (optional)</span>
+                                        <span class="priority-items-th">Start sprint</span>
+                                        <span class="priority-items-th">End sprint</span>
+                                        <span class="priority-items-th">Release date</span>
+                                        <span class="priority-items-th">Assignee</span>
+                                        <span class="priority-items-th priority-items-th-actions"></span>
+                                    </div>
+                                    <div id="priority-set-items-tbody" class="priority-items-body"></div>
+                                </div>
                             </div>
                             <button type="button" class="btn btn-secondary" id="priority-set-add-item">Add item</button>
                         </div>

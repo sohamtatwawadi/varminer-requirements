@@ -1114,21 +1114,49 @@ async function renderPriorities() {
 }
 
 function prioritySetItemsTableAddRow(row) {
-    const tbody = document.getElementById('priority-set-items-tbody');
-    if (!tbody) return;
+    const body = document.getElementById('priority-set-items-tbody');
+    if (!body) return;
     const reqText = (row && row.requirement && typeof row.requirement === 'object' && row.requirement.requirement) ? row.requirement.requirement : ((row && row.requirementText) || '');
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-        <td class="td-requirement"><textarea class="priority-item-requirement-text" placeholder="Write requirement" rows="3">${escapeHtml(reqText)}</textarea></td>
-        <td><input type="text" class="priority-item-id" placeholder="Optional, e.g. VR-001" value="${escapeHtml((row && row.requirementId) || '')}"></td>
-        <td><input type="text" class="priority-item-start-sprint" placeholder="Sprint 1" value="${escapeHtml((row && row.startSprint) || '')}"></td>
-        <td><input type="text" class="priority-item-end-sprint" placeholder="Sprint 2" value="${escapeHtml((row && row.endSprint) || '')}"></td>
-        <td><input type="date" class="priority-item-release-date" value="${(row && row.releaseDate) || ''}"></td>
-        <td><input type="text" class="priority-item-assignee" placeholder="Assignee" value="${escapeHtml((row && row.assignee) || '')}"></td>
-        <td><button type="button" class="btn-remove-row" aria-label="Remove">×</button></td>
+    const card = document.createElement('div');
+    card.className = 'priority-item-card';
+    card.innerHTML = `
+        <div class="priority-item-cell priority-item-cell-requirement">
+            <textarea class="priority-item-input priority-item-requirement-text" placeholder="Write requirement" rows="1" data-min-height="44">${escapeHtml(reqText)}</textarea>
+        </div>
+        <div class="priority-item-cell">
+            <input type="text" class="priority-item-input priority-item-id" placeholder="Optional, e.g. VR-001" value="${escapeHtml((row && row.requirementId) || '')}">
+        </div>
+        <div class="priority-item-cell">
+            <input type="text" class="priority-item-input priority-item-start-sprint" placeholder="Sprint 1" value="${escapeHtml((row && row.startSprint) || '')}">
+        </div>
+        <div class="priority-item-cell">
+            <input type="text" class="priority-item-input priority-item-end-sprint" placeholder="Sprint 2" value="${escapeHtml((row && row.endSprint) || '')}">
+        </div>
+        <div class="priority-item-cell">
+            <input type="date" class="priority-item-input priority-item-release-date" value="${(row && row.releaseDate) || ''}">
+        </div>
+        <div class="priority-item-cell">
+            <input type="text" class="priority-item-input priority-item-assignee" placeholder="Assignee" value="${escapeHtml((row && row.assignee) || '')}">
+        </div>
+        <div class="priority-item-cell priority-item-cell-remove">
+            <button type="button" class="btn-remove-row" aria-label="Remove row">×</button>
+        </div>
     `;
-    tr.querySelector('.btn-remove-row')?.addEventListener('click', () => tr.remove());
-    tbody.appendChild(tr);
+    card.querySelector('.btn-remove-row')?.addEventListener('click', () => card.remove());
+    const textarea = card.querySelector('.priority-item-requirement-text');
+    if (textarea) setupPriorityItemTextareaAutoGrow(textarea);
+    body.appendChild(card);
+}
+
+function setupPriorityItemTextareaAutoGrow(ta) {
+    const minHeight = 44;
+    function grow() {
+        ta.style.height = 'auto';
+        ta.style.height = Math.max(minHeight, ta.scrollHeight) + 'px';
+    }
+    ta.addEventListener('input', grow);
+    ta.addEventListener('focus', grow);
+    grow();
 }
 
 let currentPrioritySetData = null;
@@ -1324,20 +1352,20 @@ function closePrioritySetPanel() {
         const timeframe = document.getElementById('priority-set-timeframe').value;
         const startDate = document.getElementById('priority-set-start-date').value || null;
         const endDate = document.getElementById('priority-set-end-date').value || null;
-        const rows = document.querySelectorAll('#priority-set-items-tbody tr');
+        const cards = document.querySelectorAll('#priority-set-items-tbody .priority-item-card');
         const items = [];
-        rows.forEach((tr, i) => {
-            const reqText = (tr.querySelector('.priority-item-requirement-text')?.value ?? '').trim();
-            const rid = (tr.querySelector('.priority-item-id')?.value || '').trim();
+        cards.forEach((card, i) => {
+            const reqText = (card.querySelector('.priority-item-requirement-text')?.value ?? '').trim();
+            const rid = (card.querySelector('.priority-item-id')?.value || '').trim();
             if (!rid && !reqText) return;
             items.push({
                 requirementText: reqText || null,
                 requirementId: rid || null,
                 sortOrder: i,
-                startSprint: (tr.querySelector('.priority-item-start-sprint')?.value || '').trim() || null,
-                endSprint: (tr.querySelector('.priority-item-end-sprint')?.value || '').trim() || null,
-                releaseDate: (tr.querySelector('.priority-item-release-date')?.value || '') || null,
-                assignee: (tr.querySelector('.priority-item-assignee')?.value || '').trim() || null
+                startSprint: (card.querySelector('.priority-item-start-sprint')?.value || '').trim() || null,
+                endSprint: (card.querySelector('.priority-item-end-sprint')?.value || '').trim() || null,
+                releaseDate: (card.querySelector('.priority-item-release-date')?.value || '') || null,
+                assignee: (card.querySelector('.priority-item-assignee')?.value || '').trim() || null
             });
         });
         if (!name) { showMessage('priority-set-message', 'Name is required.', 'error'); return; }
