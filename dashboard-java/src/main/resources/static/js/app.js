@@ -1121,7 +1121,7 @@ function prioritySetItemsTableAddRow(row) {
     card.className = 'priority-item-card';
     card.innerHTML = `
         <div class="priority-item-cell priority-item-cell-requirement">
-            <textarea class="priority-item-input priority-item-requirement-text" placeholder="Write requirement" rows="1" data-min-height="44">${escapeHtml(reqText)}</textarea>
+            <textarea class="priority-item-input priority-item-requirement-text" placeholder="Write requirement" rows="1" data-min-height="40">${escapeHtml(reqText)}</textarea>
         </div>
         <div class="priority-item-cell">
             <input type="text" class="priority-item-input priority-item-id" placeholder="Optional, e.g. VR-001" value="${escapeHtml((row && row.requirementId) || '')}">
@@ -1149,7 +1149,7 @@ function prioritySetItemsTableAddRow(row) {
 }
 
 function setupPriorityItemTextareaAutoGrow(ta) {
-    const minHeight = 44;
+    const minHeight = 40;
     function grow() {
         ta.style.height = 'auto';
         ta.style.height = Math.max(minHeight, ta.scrollHeight) + 'px';
